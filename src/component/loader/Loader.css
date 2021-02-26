@@ -1,0 +1,30 @@
+.message{
+    text-align: center;
+    font-family: 'Segoe UI';
+    z-index: 100;
+}
+.message-failed{
+     color: white;
+     background-color: coral
+}
+.message-success{
+    color: white;
+    background-color:lawngreen
+}
+.message-warning{
+    color: white;
+    background-color:orange
+}
+
+.message-loading{
+    padding: 3px;
+    width:100%;
+    font-family: 'Lucida Sans';
+    position: fixed;  
+    background-color: none;
+}
+ .loader{
+    font-size: '60';
+    font-family: 'Arial Black';
+    color:white
+}

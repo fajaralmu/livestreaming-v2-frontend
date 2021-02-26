@@ -1,0 +1,6 @@
+.no-border-top {
+    border-top: none;
+}
+a:hover{
+    cursor: pointer;
+}

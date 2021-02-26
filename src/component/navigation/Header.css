@@ -1,0 +1,53 @@
+
+@media screen and (max-width: 991px) {
+   
+  
+    #navbar-brand {
+      display: block;
+    }
+    #navbar-brand-top {
+      display: none;
+    }
+  }
+  
+  @media screen and (min-width: 992px) {
+    
+    #navbarToggler {
+      /* background-color: #6c757d; */
+      background-color: rgb(84, 91, 98);
+    }
+    #navbar-brand {
+      display: none;
+    }
+    #navbar-brand-top {
+      display: block;
+    }
+    .nav-inactive {
+      /* border-top: solid 1px rgb(160, 160, 160); */
+      border-top: solid 1px rgb(120, 120, 120);
+      background-color: rgb(84, 91, 98);
+    }
+    .nav-inactive:hover {
+      border-top: solid 1px rgb(130, 130, 130);
+      background-color: rgb(95, 105, 110);
+    }
+    .nav-active {
+      border-top: solid 1px rgb(160, 160, 160);
+      background-color: #6c757d;
+      /* border-top: solid 1px rgb(120, 120, 120); */
+      /* background-color: rgb(84, 91, 98); */
+    }
+    #navbar-top {
+      position: relative;
+      top: -1px;
+    }
+    #navbar {
+      padding: 0px;
+      position: absolute;
+      border-top: solid 1px rgb(120, 120, 120);
+    }
+    #nav-link {
+      background-color: #6c757d;
+    } 
+  }
+  

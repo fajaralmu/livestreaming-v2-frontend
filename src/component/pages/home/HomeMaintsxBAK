@@ -1,0 +1,48 @@
+
+
+// import React, { Component, Fragment } from 'react';
+// import { withRouter, Link } from 'react-router-dom';
+// import { connect } from 'react-redux';
+// import BaseComponent from '../../BaseComponent';
+// import { mapCommonUserStateToProps } from '../../../constant/stores';
+// import ApplicationProfileModel from '../../../models/ApplicationProfileModel';
+// import { baseImageUrl } from '../../../constant/Url';
+
+// class HomeMain extends BaseComponent {
+//     constructor(props: any) {
+//         super(props, false);
+//     }
+
+//     componentDidMount() {
+//         document.title = "Home";
+//     }
+//     render() {
+//         const applicationProfile: ApplicationProfileModel = this.getApplicationProfile();
+//         const imageUrl: string = baseImageUrl() + applicationProfile.backgroundUrl;
+//         return (
+//             <div className="container-fluid" style={{padding:0}}>
+//                 <div className="jumbotron"
+//                     style={{
+//                         margin:'0px',
+//                         marginTop: '20px',
+//                         backgroundImage: 'url("' + imageUrl + '")',
+//                         backgroundSize: 'cover',
+//                         color: applicationProfile.fontColor
+//                     }}
+//                 >
+//                     <h1 className="display-4">{applicationProfile.name}</h1>
+//                     <p className="lead">{applicationProfile.shortDescription}</p>
+//                     <hr className="my-4" />
+//                     <p>{applicationProfile.welcomingMessage}</p>
+//                     <Link className="btn btn-primary btn-lg" to="/about" role="button">About Us</Link>
+//                 </div>
+//             </div>
+
+//         )
+//     }
+
+// } 
+
+// export default withRouter(connect(
+//     mapCommonUserStateToProps, 
+// )(HomeMain))
