@@ -2,28 +2,23 @@
 import { AuthorityType } from '../models/AuthorityType';
 import Menu from '../models/settings/Menu';
 
-export const HOME = "home"; 
+export const HOME = "home";
 export const ABOUT = "about";
 export const ACCOUNT = "account";
 export const LOGIN = "login";
 export const LOGOUT = "logout";
-export const DASHBOARD = "dashboard"; 
+export const DASHBOARD = "dashboard";
 export const MENU_SETTING = "settings";
 export const MENU_MASTER_DATA = "management";
-export const LESSONS = "lessons";
-export const CLUB = "language_club";
-export const EVENTS = "events";
-export const GALLERY = "gallery"; 
+export const CONFERENCE = "CONFERENCE";
 export const CHATROOM = "chatroom";
-export const QUIZ_MANAGEMENT = "quiz_management";
-export const PUBLIC_QUIZ = "public_quiz";
 
 export const getMenus = () => {
     let menuSet: Menu[] = [];
     for (let i = 0; i < _menus.length; i++) {
         const element: Menu = _menus[i];
-        const menu:Menu = Object.assign(new Menu, element);
-        const subMenus:Menu[] = [];
+        const menu: Menu = Object.assign(new Menu, element);
+        const subMenus: Menu[] = [];
         if (element.subMenus) {
             for (let i = 0; i < element.subMenus.length; i++) {
                 const subMenu = element.subMenus[i];
@@ -33,12 +28,12 @@ export const getMenus = () => {
         }
         menuSet.push(menu);
     }
-    
+
     return menuSet;
 }
 export const extractMenuPath = (pathName: string) => {
     const pathRaw = pathName.split('/');
-   
+
     let firstPath = pathRaw[0];
     if (firstPath.trim() == "") {
         firstPath = pathRaw[1];
@@ -69,9 +64,9 @@ const _menus: Menu[] = [
         active: false,
         authenticated: false,
         showSidebar: false,
-        role : []
+        role: []
     },
-   
+
     {
         code: DASHBOARD,
         name: "Dashboard",
@@ -81,24 +76,34 @@ const _menus: Menu[] = [
         authenticated: true,
         showSidebar: true,
         role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
+        subMenus: []
+    }, {
+        code: CONFERENCE,
+        name: "Conference",
+        url: "/conference",
+        menuClass: "fas fa-video",
+        active: false,
+        authenticated: true,
+        showSidebar: true,
+        role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
         subMenus: [
             {
-                code: 'dashboard_quiz_history',
-                name: 'Quiz History',
-                url: 'quizhistory',
-                menuClass: 'fas fa-history',
+                code: 'conf_main',
+                name: 'My Conference',
+                url: 'main',
+                menuClass: 'fas fa-list-alt',
                 role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
             },
-            // {
-            //     code: 'dashboard_productsales',
-            //     name: 'Product Sales',
-            //     url: 'productsales',
-            //     menuClass: 'fas fa-chart-line',
-            //     role: [],
-            // }
+            {
+                code: 'conf_content',
+                name: 'Streaming',
+                url: 'room',
+                menuClass: 'fas fa-user-friends',
+                role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
+            },
         ]
-    }, 
-    
+    },
+
     {
         code: MENU_MASTER_DATA,
         name: "Master Data",
@@ -117,7 +122,7 @@ const _menus: Menu[] = [
         active: false,
         authenticated: true,
         showSidebar: true,
-        role: [AuthorityType.ROLE_ADMIN ,AuthorityType.ROLE_USER],
+        role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
         subMenus: [
             {
                 code: 'user_profile',
@@ -131,9 +136,9 @@ const _menus: Menu[] = [
                 name: 'Application Setting',
                 menuClass: 'fas fa-cog',
                 url: 'app-profile',
-                role: [AuthorityType.ROLE_ADMIN ],
+                role: [AuthorityType.ROLE_ADMIN],
             },
-            
+
         ]
     },
 ];

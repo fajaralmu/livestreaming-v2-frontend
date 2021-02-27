@@ -3,6 +3,7 @@ import ApplicationProfileModel from './ApplicationProfileModel';
 import BaseModel from './BaseModel';
 import Filter from './Filter';
 import EntityProperty from './settings/EntityProperty';
+import ConferenceRoomModel from './ConferenceRoomModel';
 
 export default class WebResponse{
 	date?:Date;
@@ -25,6 +26,7 @@ export default class WebResponse{
 	token?:string;
 	loggedIn?:Boolean;
 	entityClass?:any;
+	conferenceRoom?:ConferenceRoomModel;
 	//
 	rawAxiosResponse?:any;
 

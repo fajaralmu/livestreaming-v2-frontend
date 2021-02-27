@@ -68,7 +68,7 @@ class Login extends BaseComponent {
                     <p />
                     {this.state.loading ? <Spinner /> :
                         <Fragment>
-                            <button className="btn text-light" style={{ backgroundColor: 'rgb(9,26,78)' }} type="submit">
+                            <button className="btn text-light" style={{marginRight:'5px', backgroundColor: 'rgb(9,26,78)' }} type="submit">
                                 Sign in
                             </button>
                             <AnchorWithIcon to="register" children="Register" />

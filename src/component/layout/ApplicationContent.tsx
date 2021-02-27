@@ -4,8 +4,7 @@ import React, { Component, Fragment } from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
 import { withRouter, Switch, Route } from 'react-router-dom';
-import { connect } from 'react-redux';
-import Login from '../pages/login/Login';
+import { connect } from 'react-redux'; 
 import DashboardMain from '../pages/dashboard/main/DashboardMain';
 import MasterDataMain from '../pages/masterdata/MasterDataMain';
 import HomeMain from '../pages/home/HomeMain';
@@ -16,6 +15,9 @@ import UserProfile from '../pages/settings/UserProfile';
 import EditApplicationProfile from '../pages/settings/EditApplicationProfile';
 import AboutUs from './../pages/home/AboutUs';
 import Register from '../pages/login/Register';
+import ConferenceMain from '../pages/conference/main/ConferenceMain';
+import ConferenceRoom from '../pages/conference/room/ConferenceRoom';
+import Login from '../pages/login/Login';
 
 class ApplicationContent extends BaseComponent {
 
@@ -29,15 +31,9 @@ class ApplicationContent extends BaseComponent {
     render() {
         return (
             <Fragment>
+                <LoginRoute />
                 <Switch>
-                    <Route exact path="/login" render={
-                        (props: any) =>
-                            <Login />
-                    } />
-                    <Route exact path="/register" render={
-                        (props: any) =>
-                            <Register />
-                    } />
+
                     {/* -------- home -------- */}
                     <Route exact path="/home" render={
                         (props: any) =>
@@ -71,6 +67,7 @@ class ApplicationContent extends BaseComponent {
                 <MemberQuiz />
                 <QuizManagement />
                 <Dashboard />
+                <Conference/>
             </Fragment>
         )
     }
@@ -79,8 +76,39 @@ class ApplicationContent extends BaseComponent {
     }
 
 }
+const Conference = (props) => {
+    return (
+        <Switch>
+            <Route exact path="/conference/main" render={
+                (props: any) =>
+                    <ConferenceMain />
+            } />
+            <Route exact path="/conference" render={
+                (props: any) =>
+                    <ConferenceMain />
+            } />
+            <Route exact path="/conference/room" render={
+                (props: any) =>
+                    <ConferenceRoom />
+            } />
+        </Switch>
+    )
+}
+const LoginRoute = (props) => {
 
-
+    return (
+        <Switch>
+            <Route exact path="/login" render={
+                (props: any) =>
+                    <Login />
+            } />
+            <Route exact path="/register" render={
+                (props: any) =>
+                    <Register />
+            } />
+        </Switch>
+    )
+}
 const Dashboard = (props) => {
     return (
         <Switch>
@@ -91,7 +119,7 @@ const Dashboard = (props) => {
             } />
             <Route exact path="/dashboard/quizhistory" render={
                 (props: any) =>
-                <Fragment/>    // <QuizHistoryPage />
+                    <Fragment />    // <QuizHistoryPage />
             } />
         </Switch>
     )

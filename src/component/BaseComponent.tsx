@@ -14,14 +14,14 @@ export default class BaseComponent extends Component<any, any> {
     state: any = { updated: new Date() };
     constructor(props: any, authenticated = false) {
         super(props);
-        
+
         this.authenticated = authenticated
         this.state = {
             ...this.state
         }
         this.parentApp = this.props.mainApp;
     }
-    
+
     validateLoginStatus = () => {
         if (this.authenticated == false) return;
         if (this.isLoggedUserNull()) {
@@ -29,11 +29,11 @@ export default class BaseComponent extends Component<any, any> {
         }
     }
 
-    protected sendWebSocket = (url:string, payload:WebRequest) => {
+    protected sendWebSocket = (url: string, payload: WebRequest) => {
         sendToWebsocket(url, payload);
     }
 
-    protected setWsUpdateHandler =(handler:Function | undefined) => {
+    protected setWsUpdateHandler = (handler: Function | undefined) => {
         if (this.parentApp) {
             this.parentApp.setWsUpdateHandler(handler);
         }
@@ -44,8 +44,7 @@ export default class BaseComponent extends Component<any, any> {
         }
     }
 
-    getApplicationProfile():ApplicationProfileModel
-    {
+    getApplicationProfile(): ApplicationProfileModel {
         return this.props.applicationProfile == null ? new ApplicationProfileModel() : this.props.applicationProfile;
     }
 
@@ -83,10 +82,10 @@ export default class BaseComponent extends Component<any, any> {
      * @param errorCallback 
      * @param params 
      */
-    doAjax(method: Function, withProgress: boolean, successCallback: Function, errorCallback?: Function, ...params: any ) {
+    doAjax(method: Function, withProgress: boolean, successCallback: Function, errorCallback?: Function, ...params: any) {
         this.startLoading(withProgress);
 
-        method(...params).then(function (response:WebResponse) {
+        method(...params).then(function (response: WebResponse) {
             if (successCallback) {
                 successCallback(response);
             }
@@ -104,19 +103,19 @@ export default class BaseComponent extends Component<any, any> {
         })
     }
 
-    commonAjax(method: Function, successCallback: Function, errorCallback: Function, ...params:any) {
+    commonAjax(method: Function, successCallback: Function, errorCallback: Function, ...params: any) {
         this.doAjax(method, false, successCallback, errorCallback, ...params);
     }
-    commonAjaxWithProgress(method: Function, successCallback: Function, errorCallback: Function, ...params:any) {
+    commonAjaxWithProgress(method: Function, successCallback: Function, errorCallback: Function, ...params: any) {
         this.doAjax(method, true, successCallback, errorCallback, ...params);
     }
-    getLoggedUser():User|undefined {
-        const user:User|undefined = this.props.loggedUser;
+    getLoggedUser(): User | undefined {
+        const user: User | undefined = this.props.loggedUser;
         if (!user) return undefined;
         user.editPassword = "^_^";
         return Object.assign(new User(), user);
     }
-    isAdmin = () : boolean => {
+    isAdmin = (): boolean => {
         const user = this.getLoggedUser();
         if (!user) return false;
         return user.role == AuthorityType.ROLE_ADMIN;
@@ -127,22 +126,22 @@ export default class BaseComponent extends Component<any, any> {
     isUserLoggedIn(): boolean {
         return true == this.props.loginStatus && null != this.props.loggedUser;
     }
-    showConfirmation(body:any): Promise<boolean> {
+    showConfirmation = (body: any): Promise<boolean> => {
         const app = this;
-        return new Promise(function(resolve, reject){
-            const onYes = function (e) {
+        return new Promise((resolve, reject) => {
+            const onYes = (e) => {
                 resolve(true);
             }
-            const onNo = function (e) {
+            const onNo = (e) => {
                 resolve(false);
             }
             app.parentApp.showAlert("Confirmation", body, false, onYes, onNo);
         });
-  
+
     }
-    showConfirmationDanger(body: any): Promise<any> {
+    showConfirmationDanger = (body: any): Promise<any> => {
         const app = this;
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
             const onYes = function (e) {
                 resolve(true);
             }
@@ -153,46 +152,44 @@ export default class BaseComponent extends Component<any, any> {
         });
 
     }
-    showInfo(body: any) {
+    showInfo = (body: any) => {
         this.parentApp.showAlert("Info", body, true, function () { });
     }
-    showError(body: any) {
-       
+    showError = (body: any) => {
         this.parentApp.showAlertError("Error", body, true, function () { });
     }
 
     backToLogin() {
-        if (this.props.history == null) {
-            return;
+        if (this.props.history != null) {
+            this.props.history.push("/login");
         }
-        this.props.history.push("/login");
     }
     refresh() {
         this.setState({ updated: new Date() });
     }
 
-    showCommonErrorAlert = (e:any) => {
+    showCommonErrorAlert = (e: any) => {
         console.error(e);
-        
+
         let message;
-        if (e.response && e.response.data ) {
+        if (e.response && e.response.data) {
             message = e.response.data.message;
         } else {
             message = e;
-        } 
-        this.showError("Operation Failed: "+message);
+        }
+        this.showError("Operation Failed: " + message);
     }
     componentDidMount() {
         this.validateLoginStatus();
     }
     componentDidUpdate() {
         if (this.authenticated == true && this.isLoggedUserNull()) {
-            console.debug(typeof this , "BACK TO LOGIN");
+            console.debug(typeof this, "BACK TO LOGIN");
             this.validateLoginStatus();
         }
     }
 
-    getServices = () : Services => {
+    getServices = (): Services => {
         return this.props.services;
     }
 }
