@@ -1,6 +1,6 @@
 
 
-import React, { Fragment }  from 'react';
+import React, { Fragment } from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { mapCommonUserStateToProps } from '../../../../constant/stores';
@@ -15,25 +15,32 @@ import SimpleWarning from '../../../alert/SimpleWarning';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 
 class State {
-    loading:boolean = false;
-    room?:ConferenceRoomModel;
+    loading: boolean = false;
+    room?: ConferenceRoomModel;
 }
 class ConferenceMain extends BaseMainMenus {
-    state:State = new State();
-    publicConferenceService:PublicConferenceService;
+    state: State = new State();
+    publicConferenceService: PublicConferenceService;
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
     }
 
-    recordLoaded = (response : WebResponse) => {
-        this.setState({room:response.conferenceRoom});
+    recordLoaded = (response: WebResponse) => {
+        this.setState({ room: response.conferenceRoom });
     }
-    startLoading = () => {this.setState({loading:true})}
-    endLoading = () => {this.setState({loading:false})}
+    startLoading = () => { this.setState({ loading: true }) }
+    endLoading = () => { this.setState({ loading: false }) }
     getRoom = () => {
         this.commonAjax(
             this.publicConferenceService.getRoom,
+            this.recordLoaded,
+            this.showCommonErrorAlert
+        )
+    }
+    createRoom = () => {
+        this.commonAjax(
+            this.publicConferenceService.generateRoom,
             this.recordLoaded,
             this.showCommonErrorAlert
         )
@@ -54,20 +61,25 @@ class ConferenceMain extends BaseMainMenus {
                     Welcome, <strong>{user.displayName}  </strong>
                 </div>
                 <Card title="My Room">
-                    {this.state.loading?
-                    <Spinner/>:
-                    <Fragment>
-                        {room?
-                        <RoomInfo room={room}/>
-                        :<SimpleWarning>No Data</SimpleWarning>}
-                        <AnchorWithIcon iconClassName="fas fa-sync" children="Reload" onClick={this.getRoom}    />
-                    </Fragment>}
+                    {this.state.loading ?
+                        <Spinner /> :
+                        <Fragment>
+                            {room ?
+                                <RoomInfo room={room} />
+                                : <SimpleWarning className="text-center">
+                                    <h4>No Data</h4>
+                                    <AnchorWithIcon iconClassName="fas fa-video" children="Create" onClick={this.createRoom} />
+                                </SimpleWarning>}
+                            <AnchorWithIcon iconClassName="fas fa-sync" children="Reload" onClick={this.getRoom} />
+                        </Fragment>}
                 </Card>
+
+
             </div>
         )
     }
 }
-const RoomInfo = (props:{room:ConferenceRoomModel}) => {
+const RoomInfo = (props: { room: ConferenceRoomModel }) => {
 
     return (
         <div></div>
