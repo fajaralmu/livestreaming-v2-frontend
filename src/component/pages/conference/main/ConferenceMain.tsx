@@ -14,7 +14,8 @@ import Spinner from '../../../loader/Spinner';
 import SimpleWarning from '../../../alert/SimpleWarning';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import FormGroup from '../../../form/FormGroup';
-import ToggleButton from '../../../navigation/ToggleButton';
+import ToggleButton from '../../../navigation/ToggleButton';  
+import { tableHead } from './../../../../utils/CollectionUtil';
 
 class State {
     loading: boolean = false;
@@ -80,7 +81,7 @@ class ConferenceMain extends BaseMainMenus {
                 </div>
                 <Card title="My Room">
                     {this.state.loading ?
-                        <Spinner /> :
+                        <Spinner style={{marginBottom:150}} /> :
                         <Fragment>
                             {room ?
                                 <RoomInfo setActiveStatus={this.setActiveStatus} room={room} />
@@ -91,8 +92,6 @@ class ConferenceMain extends BaseMainMenus {
                             <AnchorWithIcon iconClassName="fas fa-sync" children="Reload" onClick={this.getRoom} />
                         </Fragment>}
                 </Card>
-
-
             </div>
         )
     }
@@ -107,7 +106,28 @@ const RoomInfo = (props: { room: ConferenceRoomModel,setActiveStatus(val:boolean
                 <ToggleButton active={room.active} onClick={props.setActiveStatus}/>
             </FormGroup>
             <FormGroup label="Member Count">{room.members.length}</FormGroup>
+            <MemberList members={room.members} />
         </div>
+    )
+}
+const MemberList = (props:{members:User[]}) =>  {
+
+    return (
+        <table className="table">
+             {tableHead("No", "Name", "Action")}
+             <tbody>
+                 {props.members.map((member, i) => {
+
+                     return (
+                         <tr key={"room_member_"+i} >
+                             <td>{i+1}</td>
+                             <td>{member.displayName}</td>
+                             <td></td>
+                         </tr>
+                     )
+                 })}
+             </tbody>
+        </table>
     )
 }
 export default withRouter(connect(

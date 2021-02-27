@@ -12,7 +12,7 @@ export default class Spinner extends Component<any, any>{
             innerDivs.push(<div key={"spinner-item-"+i}></div>);
         }
         return (
-            <div style={{width:'85px', height:'85px', display:'block'}} className="container-fluid text-center" >
+            <div style={{width:'85px', height:'85px', display:'block',...this.props.style}} className="container-fluid text-center" >
                  <div style={{visibility:this.props.show == false?'hidden':'visible'}} className="lds-spinner">
                   {innerDivs}
                 </div>

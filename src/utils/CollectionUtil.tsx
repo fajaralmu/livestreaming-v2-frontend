@@ -1,17 +1,18 @@
 import React from 'react'
 import { uniqueId } from './StringUtil';
-export const tableHeader = (...values:string[]) => {
+
+
+export const tableHead = (...values:string[]) => {
    
     return (<thead>
         <tr>
             {values.map((value)=>{
-
                 return <th key={uniqueId()}>{value}</th>
             })}
         </tr>
     </thead>)
 }
-export const groupArray = function (array, division) {
+export const groupArray =  (array, division) => {
     if (null == array || array.length == 0) { return [] }
     const groupedArray = new Array();
     const itemPerDivision = Math.ceil(array.length / division)
