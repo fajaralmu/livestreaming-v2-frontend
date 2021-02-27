@@ -49,7 +49,7 @@ export default class BaseComponent extends Component<any, any> {
         return this.props.applicationProfile == null ? new ApplicationProfileModel() : this.props.applicationProfile;
     }
 
-    handleInputChange(event: any) {
+    handleInputChange = (event: any) => {
         const target = event.target;
         const value = target.type == 'checkbox' ? target.checked : target.value;
         this.setState({ [target.name]: value });
@@ -162,7 +162,7 @@ export default class BaseComponent extends Component<any, any> {
     }
 
     backToLogin() {
-        if (!this.authenticated || this.props.history == null) {
+        if (this.props.history == null) {
             return;
         }
         this.props.history.push("/login");

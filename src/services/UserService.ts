@@ -6,6 +6,7 @@ import { commonAjaxPostCalls, commonAjaxPublicPostCalls } from './Promises';
 import WebResponse from './../models/WebResponse';
 import { updateAccessToken } from './../middlewares/Common';
 export default class UserService {
+    
     private static instance?: UserService;
 
     static getInstance(): UserService {
@@ -22,6 +23,14 @@ export default class UserService {
 
         const endpoint = contextPath().concat("api/member/account/updateprofile")
         return commonAjaxPostCalls(endpoint, request);
+    }
+    saveUser = (user: User) => {
+
+        const request: WebRequest = {
+            user: user
+        } 
+        const endpoint = contextPath().concat("api/public/register")
+        return commonAjaxPublicPostCalls(endpoint, request);
     }
 
     requestApplicationId = (callbackSuccess: (response: WebResponse) => any, callbackError: ()=>any) => {

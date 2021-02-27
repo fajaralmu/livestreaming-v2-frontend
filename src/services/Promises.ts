@@ -15,7 +15,11 @@ export const rejectedPromise = (message: any) => {
 export const emptyPromise = (defaultResponse: any) => new Promise(function (res, rej) {
     res(defaultResponse);
 });
-
+/**
+ * with Authorization Header
+ * @param endpoint 
+ * @param payload 
+ */
 export const commonAjaxPostCalls = (endpoint: string, payload?: any) => {
     const request = payload == null ? {} : payload;
     return new Promise<WebResponse>(function (resolve, reject) {

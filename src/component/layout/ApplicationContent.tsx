@@ -15,6 +15,7 @@ import SettingsMain from '../pages/settings/SettingsMain';
 import UserProfile from '../pages/settings/UserProfile';
 import EditApplicationProfile from '../pages/settings/EditApplicationProfile';
 import AboutUs from './../pages/home/AboutUs';
+import Register from '../pages/login/Register';
 
 class ApplicationContent extends BaseComponent {
 
@@ -32,6 +33,10 @@ class ApplicationContent extends BaseComponent {
                     <Route exact path="/login" render={
                         (props: any) =>
                             <Login />
+                    } />
+                    <Route exact path="/register" render={
+                        (props: any) =>
+                            <Register />
                     } />
                     {/* -------- home -------- */}
                     <Route exact path="/home" render={

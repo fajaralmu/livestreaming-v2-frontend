@@ -8,6 +8,7 @@ import { mapCommonUserStateToProps } from './../../../constant/stores';
 import './Login.css';
 import { performLogin } from '../../../redux/actionCreators';
 import Spinner from './../../loader/Spinner';
+import AnchorWithIcon from './../../navigation/AnchorWithIcon';
 class IState {
     loading: boolean = false; username: string = ""; editPassword: string = "";
 }
@@ -45,7 +46,7 @@ class Login extends BaseComponent {
     }
     render() {
         return (
-            <div id="LoginForm" className="login-wrapper" style={{ margin: 0, padding: 0 }}> 
+            <div id="LoginForm" className="login-wrapper" style={{ margin: 0, padding: 0 }}>
                 <div className="text-center" style={{ marginTop: '25px' }}>
                     <svg className="x-app-icon " width="200" height="200">
                         <circle className="path-circle" fill="white" cx="100" cy="100" r="95" strokeWidth={3} stroke="rgb(9,26,78)" />
@@ -62,13 +63,16 @@ class Login extends BaseComponent {
                 <form name='login' onSubmit={(e) => { this.login(e) }}
                     method='POST' className="form-signin text-center">
                     <UsernameField value={this.state.username} onChange={this.updateCredentialProperty} />
-                    <p/>
+                    <p />
                     <PasswordField value={this.state.editPassword} onChange={this.updateCredentialProperty} />
-                    <p/>
+                    <p />
                     {this.state.loading ? <Spinner /> :
-                        <button  className="btn text-light" style={{backgroundColor:'rgb(9,26,78)'}} type="submit">
-                            Sign in
-                        </button>}
+                        <Fragment>
+                            <button className="btn text-light" style={{ backgroundColor: 'rgb(9,26,78)' }} type="submit">
+                                Sign in
+                            </button>
+                            <AnchorWithIcon to="register" children="Register" />
+                        </Fragment>}
                     <input name="transport_type" type="hidden" value="rest" />
                     <p />
                 </form>
@@ -81,14 +85,14 @@ class Login extends BaseComponent {
 const PasswordField = ({ value, onChange }) => {
     return <Fragment>
         <label className="sr-only">Password</label>
-        <input style={{borderColor:'rgb(9,26,78)'}} name="editPassword" value={value} onChange={onChange} type="password" id="inputPassword" className="form-control"
+        <input style={{ borderColor: 'rgb(9,26,78)' }} name="editPassword" value={value} onChange={onChange} type="password" id="inputPassword" className="form-control"
             placeholder="Password" required />
     </Fragment>
 }
 const UsernameField = ({ value, onChange }) => {
     return (<Fragment>
         <label className="sr-only">Username</label>
-        <input style={{borderColor:'rgb(9,26,78)'}} name="username" value={value} onChange={onChange} type="text" id="username" className="form-control"
+        <input style={{ borderColor: 'rgb(9,26,78)' }} name="username" value={value} onChange={onChange} type="text" id="username" className="form-control"
             placeholder="Username" required autoFocus />
     </Fragment>)
 }
