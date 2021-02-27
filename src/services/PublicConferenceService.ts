@@ -12,14 +12,21 @@ export default class PublicConferenceService {
         return this.instance;
     }
     getRoom = () => { 
-        const endpoint = contextPath().concat("api/member/conference/getroom")
+        const endpoint = contextPath().concat("api/member/conference/getuserroom")
         return commonAjaxPostCalls(endpoint, {});
     }
     generateRoom = () => { 
         const endpoint = contextPath().concat("api/member/conference/generateroom")
         return commonAjaxPostCalls(endpoint, {});
     }
-   
+    getRoomByCode = (code:string) => { 
+        const endpoint = contextPath().concat("api/member/conference/getroom/"+code)
+        return commonAjaxPostCalls(endpoint, {});
+    }
+    setActiveStatus = (active:boolean) => { 
+        const endpoint = contextPath().concat("api/member/conference/updateactivestatus/"+(active==true?"true":"false"))
+        return commonAjaxPostCalls(endpoint, {});
+    }
     
 
 }

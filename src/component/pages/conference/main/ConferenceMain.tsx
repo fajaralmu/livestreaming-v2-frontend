@@ -13,6 +13,8 @@ import WebResponse from './../../../../models/WebResponse';
 import Spinner from '../../../loader/Spinner';
 import SimpleWarning from '../../../alert/SimpleWarning';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
+import FormGroup from '../../../form/FormGroup';
+import ToggleButton from '../../../navigation/ToggleButton';
 
 class State {
     loading: boolean = false;
@@ -45,6 +47,22 @@ class ConferenceMain extends BaseMainMenus {
             this.showCommonErrorAlert
         )
     }
+    setActiveStatus = (active:boolean) => {
+        this.commonAjax(
+            this.publicConferenceService.setActiveStatus,
+            ()=>{
+                this.activeStatusChanged(active);
+            },
+            this.showCommonErrorAlert,
+            active
+        )
+    }
+    activeStatusChanged = (active: boolean) => {
+        const room = this.state.room;
+        if (!room) return;
+        room.active = active;
+        this.setState({room:room});
+    }
     componentDidMount() {
         super.componentDidMount();
         this.getRoom();
@@ -65,7 +83,7 @@ class ConferenceMain extends BaseMainMenus {
                         <Spinner /> :
                         <Fragment>
                             {room ?
-                                <RoomInfo room={room} />
+                                <RoomInfo setActiveStatus={this.setActiveStatus} room={room} />
                                 : <SimpleWarning className="text-center">
                                     <h4>No Data</h4>
                                     <AnchorWithIcon iconClassName="fas fa-video" children="Create" onClick={this.createRoom} />
@@ -79,10 +97,17 @@ class ConferenceMain extends BaseMainMenus {
         )
     }
 }
-const RoomInfo = (props: { room: ConferenceRoomModel }) => {
-
+const RoomInfo = (props: { room: ConferenceRoomModel,setActiveStatus(val:boolean):any }) => {
+    const room:ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
-        <div></div>
+        <div>
+            <FormGroup label="Code">{room.code}</FormGroup>
+            <FormGroup label="Created" >{room.createdDate?new Date(room.createdDate).toLocaleString():"-"}</FormGroup>
+            <FormGroup label="Active">
+                <ToggleButton active={room.active} onClick={props.setActiveStatus}/>
+            </FormGroup>
+            <FormGroup label="Member Count">{room.members.length}</FormGroup>
+        </div>
     )
 }
 export default withRouter(connect(

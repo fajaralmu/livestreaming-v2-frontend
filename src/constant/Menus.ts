@@ -96,7 +96,7 @@ const _menus: Menu[] = [
             },
             {
                 code: 'conf_content',
-                name: 'Streaming',
+                name: 'Room',
                 url: 'room',
                 menuClass: 'fas fa-user-friends',
                 role: [AuthorityType.ROLE_ADMIN, AuthorityType.ROLE_USER],
