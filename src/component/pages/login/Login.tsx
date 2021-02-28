@@ -71,7 +71,7 @@ class Login extends BaseComponent {
                             <button className="btn text-light" style={{marginRight:'5px', backgroundColor: 'rgb(9,26,78)' }} type="submit">
                                 Sign in
                             </button>
-                            <AnchorWithIcon to="register" children="Register" />
+                            <AnchorWithIcon className="btn btn-light border border-dark " to="register" children="Register" /> 
                         </Fragment>}
                     <input name="transport_type" type="hidden" value="rest" />
                     <p />

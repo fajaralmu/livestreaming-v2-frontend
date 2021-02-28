@@ -14,7 +14,7 @@ import Spinner from '../../../loader/Spinner';
 import SimpleWarning from '../../../alert/SimpleWarning';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import FormGroup from '../../../form/FormGroup';
-import ToggleButton from '../../../navigation/ToggleButton';  
+import ToggleButton from '../../../navigation/ToggleButton';
 import { tableHead } from './../../../../utils/CollectionUtil';
 
 class State {
@@ -30,7 +30,7 @@ class ConferenceMain extends BaseMainMenus {
     }
 
     recordLoaded = (response: WebResponse) => {
-        this.setState({ room: response.conferenceRoom });
+        this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) });
     }
     startLoading = () => { this.setState({ loading: true }) }
     endLoading = () => { this.setState({ loading: false }) }
@@ -48,10 +48,10 @@ class ConferenceMain extends BaseMainMenus {
             this.showCommonErrorAlert
         )
     }
-    setActiveStatus = (active:boolean) => {
+    setActiveStatus = (active: boolean) => {
         this.commonAjax(
             this.publicConferenceService.setActiveStatus,
-            ()=>{
+            () => {
                 this.activeStatusChanged(active);
             },
             this.showCommonErrorAlert,
@@ -62,13 +62,40 @@ class ConferenceMain extends BaseMainMenus {
         const room = this.state.room;
         if (!room) return;
         room.active = active;
-        this.setState({room:room});
+        this.setState({ room: room });
     }
     componentDidMount() {
         super.componentDidMount();
         this.getRoom();
     }
-
+    enterRoom = () => {
+        if (!this.state.room) return;
+        this.props.history.push({
+            pathname: "/conference/enterroom",
+            state: { roomCode: this.state.room.code }
+        })
+    }
+    removeMember = (member: User) => {
+        this.showConfirmationDanger("Remove " + member.displayName + "?")
+            .then(ok => {
+                if (!ok) return;
+                this.doRemoveMember(member);
+            })
+    }
+    memberRemoved = (response: WebResponse, member: User) => {
+        const room = this.state.room;
+        if (!room) return;
+        room.removeMember(member);
+        this.setState({ room: room });
+    }
+    doRemoveMember = (m: User) => {
+        this.commonAjax(
+            this.publicConferenceService.removeRoomMember,
+            (r) => this.memberRemoved(r, m),
+            this.showCommonErrorAlert,
+            m.code
+        )
+    }
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
@@ -81,10 +108,10 @@ class ConferenceMain extends BaseMainMenus {
                 </div>
                 <Card title="My Room">
                     {this.state.loading ?
-                        <Spinner style={{marginBottom:150}} /> :
+                        <Spinner style={{ marginBottom: 150 }} /> :
                         <Fragment>
                             {room ?
-                                <RoomInfo setActiveStatus={this.setActiveStatus} room={room} />
+                                <RoomInfo enterRoom={this.enterRoom} removeMember={this.removeMember} setActiveStatus={this.setActiveStatus} room={room} />
                                 : <SimpleWarning className="text-center">
                                     <h4>No Data</h4>
                                     <AnchorWithIcon iconClassName="fas fa-video" children="Create" onClick={this.createRoom} />
@@ -96,39 +123,45 @@ class ConferenceMain extends BaseMainMenus {
         )
     }
 }
-const RoomInfo = (props: { room: ConferenceRoomModel,setActiveStatus(val:boolean):any }) => {
-    const room:ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
+const RoomInfo = (props: { room: ConferenceRoomModel, removeMember(member: User): any, setActiveStatus(val: boolean): any, enterRoom(): any }) => {
+    const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
         <div>
             <FormGroup label="Code">{room.code}</FormGroup>
-            <FormGroup label="Created" >{room.createdDate?new Date(room.createdDate).toLocaleString():"-"}</FormGroup>
+            <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
             <FormGroup label="Active">
-                <ToggleButton active={room.active} onClick={props.setActiveStatus}/>
+                <ToggleButton active={room.active} onClick={props.setActiveStatus} />
             </FormGroup>
-            <FormGroup label="Members"/>
-            <MemberList members={room.members} room={room} />
+            {room.active ?
+                <FormGroup><AnchorWithIcon className="btn btn-warning btn-sm" onClick={props.enterRoom} children="Enter Room" /></FormGroup> : null}
+            <FormGroup label="Members" />
+            <MemberList removeMember={props.removeMember} members={room.members} room={room} />
         </div>
     )
 }
-const MemberList = (props:{members:User[], room: ConferenceRoomModel,}) =>  {
+const MemberList = (props: { members: User[], removeMember(member: User): any, room: ConferenceRoomModel, }) => {
 
     return (
         <table className="table">
-             {tableHead("No", "Name", "Action")}
-             <tbody>
-                 {props.members.map((member, i) => {
-
-                     return (
-                         <tr key={"room_member_"+i} >
-                             <td>{i+1}</td>
-                             <td>{member.displayName} 
-                             {props.room.isAdmin(member)? <i>&nbsp;- admin</i>:""}
-                             </td>
-                             <td></td>
-                         </tr>
-                     )
-                 })}
-             </tbody>
+            {tableHead("No", "Name", "Action")}
+            <tbody>
+                {props.members.map((member, i) => {
+                    const isAdmin = props.room.isAdmin(member);
+                    return (
+                        <tr key={"room_member_" + i} >
+                            <td>{i + 1}</td>
+                            <td>{member.displayName}
+                                {isAdmin ? <i>&nbsp;- admin</i> : ""}
+                            </td>
+                            <td>
+                                {isAdmin ? null :
+                                    <AnchorWithIcon onClick={e => props.removeMember(member)} iconClassName="fas fa-times" className="btn btn-danger btn-sm" children="Remove" />
+                                }
+                            </td>
+                        </tr>
+                    )
+                })}
+            </tbody>
         </table>
     )
 }

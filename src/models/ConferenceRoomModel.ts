@@ -11,5 +11,14 @@ export default class ConferenceRoomModel extends BaseModel{
 	isAdmin = (user:UserModel) => {
 		return this.user?.id == user.id;
 	}
+	removeMember = (memberToRemove:UserModel) => {
+		for (let i = 0; i < this.members.length; i++) {
+			const member = this.members[i];
+			if (memberToRemove.code == member.code) {
+				this.members.splice(i,1);
+				break;
+			}
+		}
+	}
 
 }

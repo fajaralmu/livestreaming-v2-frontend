@@ -8,6 +8,7 @@ export default class UserModel extends BaseModel{
 	profileImage?:string;
 	role :AuthorityType = AuthorityType.ROLE_USER; 
 	mainRole?:string;
+	code?:string;
 	 
 	requestId?:string;
 
