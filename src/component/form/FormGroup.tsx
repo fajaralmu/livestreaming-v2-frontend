@@ -3,9 +3,9 @@ import React, { Component } from 'react';
 interface Props {
     orientation?:string,
     show?:boolean,
-    children:any,
+    children?:any,
     label?:any,
-    className?:string,
+    className?:string, 
 }
 export default class FormGroup extends Component<Props, any>
 {

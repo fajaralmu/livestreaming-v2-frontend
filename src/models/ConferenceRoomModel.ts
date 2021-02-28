@@ -8,4 +8,8 @@ export default class ConferenceRoomModel extends BaseModel{
 	members:any[] =[];
 	chats?:any[];
 
+	isAdmin = (user:UserModel) => {
+		return this.user?.id == user.id;
+	}
+
 }

@@ -22,11 +22,13 @@ export default class BaseComponent extends Component<any, any> {
         this.parentApp = this.props.mainApp;
     }
 
-    validateLoginStatus = () => {
-        if (this.authenticated == false) return;
+    validateLoginStatus = () :boolean => {
+        if (this.authenticated == false) return true;
         if (this.isLoggedUserNull()) {
             this.backToLogin();
+            return false;
         }
+        return true;
     }
 
     protected sendWebSocket = (url: string, payload: WebRequest) => {

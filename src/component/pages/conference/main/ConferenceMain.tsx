@@ -105,12 +105,12 @@ const RoomInfo = (props: { room: ConferenceRoomModel,setActiveStatus(val:boolean
             <FormGroup label="Active">
                 <ToggleButton active={room.active} onClick={props.setActiveStatus}/>
             </FormGroup>
-            <FormGroup label="Member Count">{room.members.length}</FormGroup>
-            <MemberList members={room.members} />
+            <FormGroup label="Members"/>
+            <MemberList members={room.members} room={room} />
         </div>
     )
 }
-const MemberList = (props:{members:User[]}) =>  {
+const MemberList = (props:{members:User[], room: ConferenceRoomModel,}) =>  {
 
     return (
         <table className="table">
@@ -121,7 +121,9 @@ const MemberList = (props:{members:User[]}) =>  {
                      return (
                          <tr key={"room_member_"+i} >
                              <td>{i+1}</td>
-                             <td>{member.displayName}</td>
+                             <td>{member.displayName} 
+                             {props.room.isAdmin(member)? <i>&nbsp;- admin</i>:""}
+                             </td>
                              <td></td>
                          </tr>
                      )

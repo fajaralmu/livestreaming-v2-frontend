@@ -18,6 +18,7 @@ import Register from '../pages/login/Register';
 import ConferenceMain from '../pages/conference/main/ConferenceMain';
 import ConferenceRoom from '../pages/conference/room/ConferenceRoom';
 import Login from '../pages/login/Login';
+import ConferenceRoomSteaming from '../pages/conference/room/ConferenceRoomSteaming';
 
 class ApplicationContent extends BaseComponent {
 
@@ -90,6 +91,10 @@ const Conference = (props) => {
             <Route exact path="/conference/room" render={
                 (props: any) =>
                     <ConferenceRoom />
+            } />
+            <Route exact path="/conference/enterroom" render={
+                (props: any) =>
+                    <ConferenceRoomSteaming />
             } />
         </Switch>
     )
