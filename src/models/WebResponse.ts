@@ -27,6 +27,7 @@ export default class WebResponse{
 	loggedIn?:Boolean;
 	entityClass?:any;
 	conferenceRoom?:ConferenceRoomModel;
+	conferenceUpdate?:string;
 	//
 	rawAxiosResponse?:any;
 

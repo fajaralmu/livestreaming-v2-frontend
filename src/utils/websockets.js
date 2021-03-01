@@ -1,3 +1,4 @@
+import { exists } from 'fs';
 import { doItLater } from './EventUtil';
 
 let stompClient = undefined; 
@@ -30,6 +31,13 @@ export const addOnWsConnectCallbacks = (...callbacks) => {
 
 export const performWebsocketConnection = () => {
 	var socket = new window.SockJS(websocketUrl);
+	try {
+		if (stompClient) {
+			stompClient.disconnect();
+		}
+	} catch (error) {
+		
+	}
 	stompClient  = window.Stomp.over(socket);
 	stompClient .connect({}, function (frame) {
 		wsConnected = true;
@@ -62,6 +70,20 @@ export const performWebsocketConnection = () => {
 	 
 }
 
+/**
+ * 
+ * @param {string} id 
+ */
+export const removeWebsocketCallback = (id) => {
+	for (let i = 0; i < subscriptionCallbacks.length; i++) {
+		const existingCallback = subscriptionCallbacks[i];
+		if (existingCallback.id == id) {
+			subscriptionCallbacks.splice(i, 1);
+			break;
+		}
+	}
+}
+
  /**
   * 
   * @param  {...WsCallback} callBackObjects 
@@ -72,6 +94,21 @@ export const registerWebSocketCallbacks = (...callBackObjects) => {
 		return;
 	}
 	for (var i = 0; i < callBackObjects.length; i++) {
-		subscriptionCallbacks.push(callBackObjects[i]);
+		const callback = callBackObjects[i];
+		if (!callbackExist(callback)) {
+			subscriptionCallbacks.push(callback);
+		}
 	}
+}
+
+/**
+ * 
+ * @param {id, subscribeUrl, callback} callback 
+ */
+const callbackExist = (callback ) => {
+	for (let i = 0; i < subscriptionCallbacks.length; i++) {
+		const existingCallback = subscriptionCallbacks[i];
+		if (existingCallback.id == callback.id) return true;
+	}
+	return false;
 }

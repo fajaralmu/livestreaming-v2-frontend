@@ -6,7 +6,7 @@ import User from '../models/UserModel';
 import Services from './../services/Services';
 import { AuthorityType } from '../models/AuthorityType';
 import WebRequest from './../models/WebRequest';
-import { sendToWebsocket } from './../utils/websockets';
+import { performWebsocketConnection, registerWebSocketCallbacks, sendToWebsocket } from './../utils/websockets';
 
 export default class BaseComponent extends Component<any, any> {
     parentApp: any;
@@ -39,6 +39,10 @@ export default class BaseComponent extends Component<any, any> {
         if (this.parentApp) {
             this.parentApp.setWsUpdateHandler(handler);
         }
+    }
+    protected addWebsocketCallback = (callback:{id:string, subscribeUrl:string, callback(response:WebResponse):any}) => {
+        registerWebSocketCallbacks(callback);
+        performWebsocketConnection();
     }
     protected resetWsUpdateHandler = () => {
         if (this.parentApp) {

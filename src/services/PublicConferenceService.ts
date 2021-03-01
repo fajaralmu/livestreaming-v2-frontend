@@ -23,6 +23,10 @@ export default class PublicConferenceService {
         const endpoint = contextPath().concat("api/member/conference/getroom/"+code)
         return commonAjaxPostCalls(endpoint, {});
     }
+    leaveRoom = (code:string) => { 
+        const endpoint = contextPath().concat("api/member/conference/leaveroom/"+code)
+        return commonAjaxPostCalls(endpoint, {});
+    }
     removeRoomMember = (code:string) => { 
         const endpoint = contextPath().concat("api/member/conference/removeroommember/"+code)
         return commonAjaxPostCalls(endpoint, {});

@@ -163,10 +163,12 @@ class App extends Component<any, IState> {
   initWebsocket = () => {
     setWebSocketUrl(url.contextPath() + 'realtime-app');
     registerWebSocketCallbacks({
+      id:"PROGRESS",
       subscribeUrl: "/wsResp/progress/" + this.props.requestId,
       callback: this.handleProgress  //must use lambda
     },
       {
+        id:"GENERAL_UPDATE",
         subscribeUrl: "/wsResp/" + this.props.requestId + "/update",
         callback: (response) => this.handleWsUpdate(response)
       });
