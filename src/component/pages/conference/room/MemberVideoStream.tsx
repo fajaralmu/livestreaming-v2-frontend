@@ -12,15 +12,16 @@ export class MemberVideoStream extends BaseComponent {
     constructor(props) {
         super(props, true);
     }
-    getUser = (): UserModel => {
-        return this.props.user;
+    getMember = (): UserModel => {
+        return this.props.member;
     }
     getRoom = (): ConferenceRoomModel => {
         return this.props.room;
     }
     render() {
-
-        return <div className="col-md-4"><Card title={this.getUser().displayName}>
+        const room = this.getRoom();
+        const user = this.getMember();
+        return <div className="col-md-4"><Card title={user.displayName + (room.isAdmin(user)?"-admin":"")}>
 
         </Card></div>
 

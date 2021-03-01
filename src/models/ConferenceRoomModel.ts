@@ -11,7 +11,8 @@ export default class ConferenceRoomModel extends BaseModel{
 	addMember = (user: UserModel) => {
         this.members.push(user);
     }
-	isAdmin = (user:UserModel) => {
+	isAdmin = (user:UserModel|undefined) => {
+		if (!user) return false;
 		return this.user?.id == user.id;
 	}
 	removeMember = (memberToRemove:UserModel) => {

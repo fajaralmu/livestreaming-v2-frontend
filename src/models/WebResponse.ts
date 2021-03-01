@@ -4,6 +4,7 @@ import BaseModel from './BaseModel';
 import Filter from './Filter';
 import EntityProperty from './settings/EntityProperty';
 import ConferenceRoomModel from './ConferenceRoomModel';
+import WebRtcHandshake from './WebRtcHandshake';
 
 export default class WebResponse{
 	date?:Date;
@@ -28,6 +29,7 @@ export default class WebResponse{
 	entityClass?:any;
 	conferenceRoom?:ConferenceRoomModel;
 	conferenceUpdate?:string;
+	realtimeHandshake?:WebRtcHandshake;
 	//
 	rawAxiosResponse?:any;
 

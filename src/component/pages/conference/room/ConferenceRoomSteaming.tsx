@@ -15,6 +15,9 @@ import SimpleWarning from '../../../alert/SimpleWarning';
 import Card from '../../../container/Card';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import { MemberVideoStream } from './MemberVideoStream';
+import { removeWebsocketCallback } from '../../../../utils/websockets';
+import UserModel from './../../../../models/UserModel';
+import WebRtcObject from './../../../../models/WebRtcObject';
 const PEER_NEW = "PEER_NEW", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
     roomCode?: string;
@@ -24,9 +27,40 @@ class State {
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
     publicConferenceService: PublicConferenceService;
+
+    HandshakeHandler:{};
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
+        this.HandshakeHandler = {
+            "offer": (origin: string, data: WebRtcObject) => {
+                this.handleOffer(origin, data);
+            },
+            "answer": (origin: string, data: WebRtcObject) => {
+                this.handleAnswer(origin, data);
+            },
+            "candidate": (origin: string, data: WebRtcObject) => {
+                this.handleCandidate(origin, data);
+            },
+            // "leave" :  (requestId, data) => {
+            // 	handlePartnerLeave(data);
+            // },
+            // "dial" :  (requestId, data) =>{
+            // 	handlePartnerDial(requestId);
+            // }
+        };
+    }
+    handleOffer = (origin: string, data: WebRtcObject) => {
+        console.debug("HANDLE ANSWER FROM : ", origin);   
+    }
+    handleAnswer = (origin: string, data: WebRtcObject) => {
+        console.debug("HANDLE OFFER FROM : ", origin);   
+    }
+    handleCandidate = (origin: string, data: WebRtcObject) => {
+        console.debug("HANDLE CANDIDATE FROM : ", origin);   
+    }
+    componentWillUnmount() {
+        this.removeWebsocketCallback('CONFERENCE_STREAMING');
     }
     recordLoaded = (response: WebResponse) => {
         this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) }, this.initWebsocketCallback);
@@ -36,7 +70,22 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             id: 'CONFERENCE_STREAMING',
             subscribeUrl: '/wsResp/conference/' + this.state.roomCode,
             callback: this.wsCallback
+        }, {
+            id: 'PEER_HANDSHAKE',
+            subscribeUrl: '/wsResp/webrtcpublicconference/' + this.state.roomCode + '/' + this.getLoggedUser()?.code,
+            callback: this.webRtcHandshake
         });
+
+    }
+    webRtcHandshake = (response: WebResponse) => {
+        const handshakeObject = response.realtimeHandshake;
+        if (!handshakeObject) return;
+        if (handshakeObject.origin == this.getLoggedUser()?.code) {
+            return;
+        }
+        this.handleWebRtcHandshake(handshakeObject.eventId, handshakeObject.origin, handshakeObject.webRtcObject);
+    }
+    handleWebRtcHandshake = (event: string, origin: string, webRtcObject: WebRtcObject) => {
 
     }
     wsCallback = (response: WebResponse) => {
@@ -96,7 +145,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             return;
         }
         this.commonAjax(
-            this.publicConferenceService.getRoomByCode,
+            this.publicConferenceService.enterRoom,
             this.recordLoaded,
             this.showCommonErrorAlert,
             this.state.roomCode
@@ -138,7 +187,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 {this.state.loading ?
                     <Spinner /> :
                     this.state.room ?
-                        <RoomInfo leaveRoom={this.leaveRoom} room={this.state.room} />
+                        <RoomInfo user={user} leaveRoom={this.leaveRoom} room={this.state.room} />
                         : <SimpleWarning children="No Data" />
                 }
             </div>
@@ -146,27 +195,30 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { room: ConferenceRoomModel, leaveRoom(): any }) => {
+const RoomInfo = (props: { user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
     const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
         <Card>
             <FormGroup label="Code">{room.code}</FormGroup>
             <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
             <FormGroup>
-                <AnchorWithIcon iconClassName="fas fa-sign-out" onClick={props.leaveRoom}>Leave</AnchorWithIcon>
+                <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
+                    {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
             </FormGroup>
             <FormGroup label="Members" />
-            <MemberList members={room.members} room={room} />
+            <MemberList user={props.user} members={room.members} room={room} />
         </Card>
     )
 }
 
-const MemberList = (props: { members: User[], room: ConferenceRoomModel, }) => {
+const MemberList = (props: { user: UserModel, members: User[], room: ConferenceRoomModel, }) => {
     return (
         <div className="row">
             {props.members.map((member, i) => {
                 return (
-                    <MemberVideoStream user={member} room={props.room} key={"vid-stream-" + member.code} />
+                    <MemberVideoStream user={props.user}
+                        member={member}
+                        room={props.room} key={"vid-stream-" + member.code} />
                 )
             })}
         </div>

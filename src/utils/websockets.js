@@ -75,6 +75,7 @@ export const performWebsocketConnection = () => {
  * @param {string} id 
  */
 export const removeWebsocketCallback = (id) => {
+	console.debug("Remove WS Callback: ", id);
 	for (let i = 0; i < subscriptionCallbacks.length; i++) {
 		const existingCallback = subscriptionCallbacks[i];
 		if (existingCallback.id == id) {
@@ -89,13 +90,15 @@ export const removeWebsocketCallback = (id) => {
   * @param  {...WsCallback} callBackObjects 
   */
 export const registerWebSocketCallbacks = (...callBackObjects) => {
-
+	// console.debug("callBackObjects: ", callBackObjects);
 	if (null == callBackObjects) {
 		return;
 	}
 	for (var i = 0; i < callBackObjects.length; i++) {
 		const callback = callBackObjects[i];
+		// console.debug("callback: ", callback);
 		if (!callbackExist(callback)) {
+			console.debug(" register callback id: ", callback.id);
 			subscriptionCallbacks.push(callback);
 		}
 	}
