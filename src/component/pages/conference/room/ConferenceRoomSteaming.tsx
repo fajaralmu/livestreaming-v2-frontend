@@ -15,6 +15,7 @@ import { tableHead } from '../../../../utils/CollectionUtil';
 import SimpleWarning from '../../../alert/SimpleWarning';
 import Card from '../../../container/Card';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
+import { MemberVideoStream } from './MemberVideoStream';
 class State {
     roomCode?: string;
     room?: ConferenceRoomModel;
@@ -38,7 +39,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         console.debug("this.props.location.state: ", this.props.location.state);
         const roomCode = this.props.location.state.roomCode;
         if (roomCode) {
-            this.setState({roomCode:roomCode}, this.getRoom);
+            this.setState({ roomCode: roomCode }, this.getRoom);
         } else {
             this.props.history.push("/conference/room");
         }
@@ -61,7 +62,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         )
     }
     componentDidMount() {
-        if (!this.validateLoginStatus()){
+        if (!this.validateLoginStatus()) {
             this.backToLogin();
             return;
         }
@@ -71,7 +72,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         if (!this.state.roomCode) return;
         this.props.history.push({
             pathname: "/conference/enterroom",
-            state: { quiz:this.state.roomCode }
+            state: { quiz: this.state.roomCode }
         })
     }
     render() {
@@ -81,7 +82,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
                 <h2>STREAMING Room</h2>
                 <div className="alert alert-info">
-                    Welcome, <strong>{user.displayName}  </strong> 
+                    Welcome, <strong>{user.displayName}  </strong>
                 </div>
 
                 {this.state.loading ?
@@ -95,7 +96,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { room: ConferenceRoomModel, enterRoom():any }) => {
+const RoomInfo = (props: { room: ConferenceRoomModel, enterRoom(): any }) => {
     const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
         <Card>
@@ -110,23 +111,13 @@ const RoomInfo = (props: { room: ConferenceRoomModel, enterRoom():any }) => {
 const MemberList = (props: { members: User[], room: ConferenceRoomModel, }) => {
 
     return (
-        <table className="table">
-            {tableHead("No", "Name", "Action")}
-            <tbody>
-                {props.members.map((member, i) => {
-
-                    return (
-                        <tr key={"room_member_" + i} >
-                            <td>{i + 1}</td>
-                            <td>{member.displayName}
-                                {props.room.isAdmin(member) ? <i>&nbsp;- admin</i> : ""}
-                            </td>
-                            <td></td>
-                        </tr>
-                    )
-                })}
-            </tbody>
-        </table>
+        <div className="row">
+            {props.members.map((member, i) => { 
+                return (
+                    <MemberVideoStream user={member} room={props.room} key={"vid-stream-" + member.code} />
+                )
+            })}
+        </div>
     )
 }
 
