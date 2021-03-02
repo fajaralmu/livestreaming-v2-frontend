@@ -1,12 +1,24 @@
 
-import MemberVideoStream from './../component/pages/conference/room/MemberVideoStream';
+import MemberVideoStream from '../../component/pages/conference/room/MemberVideoStream';
 export default class PeerConnection extends RTCPeerConnection {
-   
-    memberCode:string;
-    created:Date = new Date();
-    updated?:Date;
-    private component:MemberVideoStream;
-    constructor(config :RTCConfiguration, memberCode:string, comp:MemberVideoStream) {
+    performCreateAnswer(origin: string) {
+
+        this.createAnswer().then((answer: RTCSessionDescriptionInit) => {
+            console.info("createAnswer to", origin);
+            this.component.addLog("CREATE ANSWER TO :" + origin);
+            this.setLocalDescription(answer).then((e) => {
+                this.component.sendHandshake('answer', answer, origin);
+            }).catch((e) => this.component.errorSessionDescription(e, "ANSWER"));
+
+        }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
+
+    }
+
+    memberCode: string;
+    created: Date = new Date();
+    updated?: Date;
+    private component: MemberVideoStream;
+    constructor(config: RTCConfiguration, memberCode: string, comp: MemberVideoStream) {
         super(config);
         this.memberCode = memberCode;
         this.component = comp;
@@ -58,7 +70,7 @@ export default class PeerConnection extends RTCPeerConnection {
         this.onicecandidateerror = function (e) {
             console.error("Error On Candidate: ", e);
         }
-        this.onconnectionstatechange =function (event)  {
+        this.onconnectionstatechange = function (event) {
             console.debug("Connection State: ", this.connectionState);
             switch (this.connectionState) {
                 case "connected":
@@ -75,23 +87,23 @@ export default class PeerConnection extends RTCPeerConnection {
         }
     }
 
-    senderInfo = ()  :string=> {
-        let info :string = " Sender : ";
+    senderInfo = (): string => {
+        let info: string = " Sender : ";
         for (let i = 0; i < this.getSenders().length; i++) {
             const sender = this.getSenders()[i];
             try {
-                info+=" - KIND: "+sender.track?.kind;
+                info += " - KIND: " + sender.track?.kind;
             } catch (error) {
-                
+
             }
         }
         return info;
     }
 
-    performCreateOffer(trackAdded:boolean) {
-         
+    performCreateOffer(trackAdded: boolean) {
+
         this.createOffer().then((offer: RTCSessionDescriptionInit) => {
-            this.component.addLog("CREATE OFFER TO :" + this.memberCode + "this.trackAdded: " +trackAdded + this.senderInfo())//+ this.trackAdded + " > " + this.tracks.length);
+            this.component.addLog("CREATE OFFER TO :" + this.memberCode + "this.trackAdded: " + trackAdded + this.senderInfo())//+ this.trackAdded + " > " + this.tracks.length);
             this.setLocalDescription(offer).then((value) => {
                 this.component.sendHandshake('offer', offer);
             }).catch((e) => this.component.errorSessionDescription(e, "CREATE OFFER"));
@@ -100,5 +112,5 @@ export default class PeerConnection extends RTCPeerConnection {
             console.error("ERROR CREATE OFFER: ", e);
         });
     }
-    
+
 }

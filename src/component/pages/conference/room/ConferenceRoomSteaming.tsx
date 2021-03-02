@@ -16,14 +16,18 @@ import Card from '../../../container/Card';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import { removeOnConnecCallback as removeWSOnConnecCallback, removeWebsocketCallback } from '../../../../utils/websockets';
 import UserModel from './../../../../models/UserModel';
-import WebRtcObject from './../../../../models/WebRtcObject';
+import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
+enum StreamType{
+ CAMERA, SCREEN
+}
 const PEER_NEW = "PEER_NEW", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
     roomCode?: string;
     room?: ConferenceRoomModel;
     loading: boolean = false;
+    streamType:StreamType = StreamType.CAMERA;
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
@@ -208,30 +212,45 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             return;
         }
         room.removeMember(peer);
-        doItLater(()=> {
-            room.addMember(peer);
-            this.setState({ room: room }, () => {
-                if (!this.videoStream) {
-                    this.peerToDials.push(peer.code);
-                } else {
-                    this.dialPeerByCode(peer.code);
-                }
-            });
-        }, 1000);
+        this.setState({ room: room }, () => {
+            this.reAddMemberAndDial(peer);
+        });
+    }
 
+    reAddMemberAndDial = (peer: User) => {
+        const room = this.state.room;
+        if (!room) return;
+        // doItLater(() => {
+        room.addMember(peer);
+        this.setState({ room: room }, () => {
+            if (!this.videoStream) {
+                this.peerToDials.push(peer.code);
+            } else {
+                this.dialPeerByCode(peer.code);
+            }
+        });
+        // }, 1000);
     }
     dialPeerByCode = (code: string) => {
         const ref = this.memberRefs.get(code);
-        if (!this.videoStream) {
-            this.peerToDials.push(code);
-            return;
-        }
         if (!ref || !ref.current || code == this.getLoggedUser()?.code) {
             console.warn("DIAL MEMBER not allowed");
             return;
         }
+        if (!this.videoStream) {
+            this.peerToDials.push(code);
+            return;
+        }
         console.debug("Will Create OFFER to: ", code);
         ref.current.createOffer(this.videoStream);
+    }
+    dialAllMember = () => {
+        if (!this.videoStream) {
+            console.warn("Cannot dial all peer, video stream is missing");
+        }
+        this.memberRefs.forEach((ref, code)=> {
+            this.dialPeerByCode(code);
+        });
     }
     addNewRoomMember = (response: WebResponse) => {
         const room = this.state.room;
@@ -288,16 +307,17 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
     initMediaStream = () => {
         const config = { video: true, audio: true };
-
-        // if (streamType == "camera") {
-        const mediaStream: Promise<MediaStream> = window.navigator.mediaDevices.getUserMedia(config)
+        let mediaStream: Promise<MediaStream>;
+        // if (this.state.streamType = StreamType.CAMERA) {
+          mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         // } else {
-        // 	mediaStream = window.navigator.mediaDevices.getDisplayMedia(config)
+        // 	// window.navigator.mediaDevices.get
         // }
-
+        // if (mediaStream) {
         mediaStream
             .then((stream: MediaStream) => { this.handleStream(stream) })
             .catch(console.error);
+        // }
 
     }
 
@@ -372,7 +392,8 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                     this.state.room ?
                         <Fragment>
                             <video muted ref={this.videoRef} height="200" width={200} controls />
-                            <RoomInfo memberRefs={this.memberRefs} user={user} leaveRoom={this.leaveRoom} room={this.state.room} />
+                            <RoomInfo redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user} 
+                                leaveRoom={this.leaveRoom} room={this.state.room} />
 
                             {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
                             <Card>
@@ -397,7 +418,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
+const RoomInfo = (props: { redialAll():any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
     const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
         <Card>
@@ -406,6 +427,8 @@ const RoomInfo = (props: { memberRefs: Map<string, RefObject<MemberVideoStream>>
             <FormGroup>
                 <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
                     {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
+                    <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
+                    Redial</AnchorWithIcon>
             </FormGroup>
         </Card>
     )

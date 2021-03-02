@@ -4,7 +4,7 @@ import BaseModel from './BaseModel';
 import Filter from './Filter';
 import EntityProperty from './settings/EntityProperty';
 import ConferenceRoomModel from './ConferenceRoomModel';
-import WebRtcHandshake from './WebRtcHandshake';
+import WebRtcHandshake from './conference/WebRtcHandshake';
 
 export default class WebResponse{
 	date?:Date;

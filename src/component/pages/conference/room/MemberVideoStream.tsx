@@ -4,7 +4,7 @@ import UserModel from './../../../../models/UserModel';
 import ConferenceRoomModel from './../../../../models/ConferenceRoomModel';
 import { uniqueId } from './../../../../utils/StringUtil';
 import { sendToWebsocket } from './../../../../utils/websockets';
-import PeerConnection from './../../../../models/PeerConnection';
+import PeerConnection from '../../../../models/conference/PeerConnection';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 interface Props {
     user: UserModel,
@@ -102,17 +102,7 @@ export default class MemberVideoStream extends Component<Props, State> {
         const peerConnection = this.getConnection(true);
         this.addStream(stream);
         peerConnection.performCreateOffer(this.trackAdded);
-        // const memberCode = this.getMember().code;
-        // peerConnection.createOffer().then((offer: RTCSessionDescriptionInit) => {
-        //     this.addLog("CREATE OFFER TO :" + memberCode + "this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
-        //     peerConnection.setLocalDescription(offer).then((value) => {
-        //         this.sendHandshake('offer', offer);
-        //     }).catch((e) => this.errorSessionDescription(e, "CREATE OFFER"));
-        //     //  .updatePeerConnection(requestId,peerConnection );
-        // }).catch((e) => {
-        //     console.error("ERROR CREATE OFFER: ", e);
-        // });
-        // updatePeerConnection(requestId,peerConnection );
+       
     }
 
     errorSessionDescription = (error, type: string) => {
@@ -135,14 +125,15 @@ export default class MemberVideoStream extends Component<Props, State> {
 
     createAnswer = (origin: string) => {
         const peerConnection = this.getConnection();
-        peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
-            console.info("createAnswer to", origin);
-            this.addLog("CREATE ANSWER TO :" + origin);
-            peerConnection.setLocalDescription(answer).then((e) => {
-                this.sendHandshake('answer', answer, origin);
-            }).catch((e) => this.errorSessionDescription(e, "ANSWER"));
+        peerConnection.performCreateAnswer(origin);
+        // peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
+        //     console.info("createAnswer to", origin);
+        //     this.addLog("CREATE ANSWER TO :" + origin);
+        //     peerConnection.setLocalDescription(answer).then((e) => {
+        //         this.sendHandshake('answer', answer, origin);
+        //     }).catch((e) => this.errorSessionDescription(e, "ANSWER"));
 
-        }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
+        // }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
     }
 
     handleCandidate = (origin: string, candidate) => {
