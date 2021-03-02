@@ -6,7 +6,7 @@ import User from '../models/UserModel';
 import Services from './../services/Services';
 import { AuthorityType } from '../models/AuthorityType';
 import WebRequest from './../models/WebRequest';
-import { performWebsocketConnection, registerWebSocketCallbacks, removeWebsocketCallback, sendToWebsocket } from './../utils/websockets';
+import { addOnWsConnectCallbacks, performWebsocketConnection, registerWebSocketCallbacks, removeWebsocketCallback, sendToWebsocket } from './../utils/websockets';
 
 export default class BaseComponent extends Component<any, any> {
     parentApp: any;
@@ -41,12 +41,19 @@ export default class BaseComponent extends Component<any, any> {
         }
     }
     //:{id:string, subscribeUrl:string, callback(response:WebResponse):any}
-    protected addWebsocketCallback = (...callbacks:any[]) => {
-        
+    protected addWebsocketSubscriptionCallback = (...callbacks:any[]) => {
         registerWebSocketCallbacks(...callbacks);
+        
+    }
+
+    protected connectWs = () =>{
         performWebsocketConnection();
     }
-    protected removeWebsocketCallback = (...id) => {
+    
+   protected addOnWsConnectCallbacks = (...onWsConnectCallbacks) => {
+        addOnWsConnectCallbacks(...onWsConnectCallbacks);
+    }
+    protected removeWSSubscriptionCallback = (...id) => {
         for (let i = 0; i < id.length; i++) {
             removeWebsocketCallback(id[i]);
         }

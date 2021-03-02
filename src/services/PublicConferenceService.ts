@@ -2,6 +2,11 @@
 import { contextPath } from '../constant/Url';
 import { commonAjaxPostCalls } from './Promises'; 
 export default class PublicConferenceService {
+    nofityUserEnter( roomCode:string) {
+        console.debug("nofityUserEnter: ", roomCode);
+        const endpoint = contextPath().concat("api/member/conference/notifyuserenterroom/"+roomCode)
+        return commonAjaxPostCalls(endpoint, {});
+    }
     
     private static instance?: PublicConferenceService;
 
