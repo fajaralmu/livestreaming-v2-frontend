@@ -208,12 +208,16 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
     dialPeerByCode = (code: string) => {
         const ref = this.memberRefs.get(code);
-
+        if (!this.videoStream) {
+            this.peerToDials.push(code);
+            return;
+        }
         if (!ref || !ref.current || code == this.getLoggedUser()?.code) {
             console.warn("DIAL MEMBER not allowed");
             return;
         }
         console.debug("Will Create OFFER to: ", code);
+        ref.current.addStream(this.videoStream);
         ref.current.createOffer();
     }
     addNewRoomMember = (response: WebResponse) => {
@@ -299,14 +303,23 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             }, 1000);
             console.debug("this.videoRef.current not found, retrying in 1 sec");
         }
+        this.videoStream = stream;
+        this.addStreamToPeers();
+        this.checkDialWaiting();
+        
+        console.debug("END getUserMedia");
+    }
+    addStreamToPeers = () => {
         this.memberRefs.forEach((ref, key) => {
             if (key != this.getLoggedUser()?.getCode()) {
-                if (ref.current) {
-                    ref.current.addStream(stream);
+                if (ref.current && this.videoStream) {
+                    ref.current.addStream(this.videoStream);
                 }
             }
 
         })
+    }
+    checkDialWaiting = () => {
         if (this.peerToDials.length > 0) {
             for (let i = 0; i < this.peerToDials.length; i++) {
                 const element = this.peerToDials[i];
@@ -314,8 +327,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             }
             this.peerToDials = [];
         }
-        this.videoStream = stream;
-        console.debug("END getUserMedia");
     }
     leaveRoom = () => {
         if (!this.state.roomCode) return;

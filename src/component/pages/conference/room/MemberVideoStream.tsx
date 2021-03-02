@@ -173,7 +173,7 @@ export default class MemberVideoStream extends Component<Props, State> {
                     event: "offer",
                     data: offer
                 });
-            }).catch((e)=>this.setSessionDescriptionError(e, "OFFER"));
+            }).catch((e)=>this.errorSessionDescription(e, "CREATE OFFER"));
             //  .updatePeerConnection(requestId,peerConnection );
         }).catch((e) => {
             console.error("ERROR CREATE OFFER: ", e);
@@ -181,17 +181,22 @@ export default class MemberVideoStream extends Component<Props, State> {
         // updatePeerConnection(requestId,peerConnection );
     }
 
-    setSessionDescriptionError = (error, type:string) => {
+    errorSessionDescription = (error, type:string) => {
         console.error("ERROR SET SESSION DESCRIPTION while ",type,": ", error);
     }
 
     handleOffer = (origin: string, offer) => {
         this.addLog("GET OFFER FROM :" + origin);
         const peerConnection = this.getPeerConnection();
-        if (!peerConnection) {
-            return;
-        }
-        peerConnection.setRemoteDescription(offer);
+        peerConnection.setRemoteDescription(offer).then((val)=>{
+            this.createAnswer(origin);
+        })
+        .catch((e)=>this.errorSessionDescription(e, "HANDLE OFFER")); 
+       
+    }
+
+    createAnswer = (origin:string) => {
+        const peerConnection = this.getPeerConnection();
         peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
             console.info("createAnswer to", origin);
             this.addLog("CREATE ANSWER TO :" + origin);
@@ -201,11 +206,11 @@ export default class MemberVideoStream extends Component<Props, State> {
                     event: "answer",
                     data: answer
                 });
-            }).catch((e)=>this.setSessionDescriptionError(e, "ANSWER"));
+            }).catch((e)=>this.errorSessionDescription(e, "ANSWER"));
              
         }).catch((e) =>  console.error("ERROR CREATE ANSWER: ", e) );
-       
     }
+
     clearLog = () => {
        this.setState({logs: []});
     }
@@ -213,7 +218,8 @@ export default class MemberVideoStream extends Component<Props, State> {
         this.addLog("GET CANDIDATE FROM :" + origin);
         const peerConnection = this.getPeerConnection();
         // console.debug(requestId, "handleCandidate: ", candidate);
-        peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+        .catch((e)=>this.errorSessionDescription(e, "HANDLE CANDIDATE"));
     }
 
     handleAnswer = (origin: string, answer) => {
@@ -223,7 +229,7 @@ export default class MemberVideoStream extends Component<Props, State> {
             this.addLog("SIGNALING STATE STABLE");
         }
         peerConnection.setRemoteDescription((answer))
-         .catch((e)=>this.setSessionDescriptionError(e, "SET ANSWER"));
+         .catch((e)=>this.errorSessionDescription(e, "SET ANSWER"));
 
     }
     redial = () => {
