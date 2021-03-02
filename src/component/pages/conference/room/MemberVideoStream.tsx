@@ -14,11 +14,11 @@ interface Props {
 }
 class State {
     videoVisible: boolean = false;
-    logs:string[] = [];
+    logs: string[] = [];
 }
 export default class MemberVideoStream extends Component<Props, State> {
 
-    trackAdded:boolean = false;
+    trackAdded: boolean = false;
     rtcConfiguration: any = {
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
@@ -31,11 +31,12 @@ export default class MemberVideoStream extends Component<Props, State> {
             //     }
         ]
     };
-     
+
     peerConnection?: PeerConnection;
     state: State = new State();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
     tracks: MediaStreamTrack[] = new Array();
+    stream?: MediaStream;
     constructor(props) {
         super(props);
     }
@@ -48,8 +49,14 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
         return false;
     }
-    addStream = (stream: MediaStream) => {
-        
+    private reAddStream = () => {
+        if (!this.stream) return;
+        const peerConnection = this.getPeerConnection();
+        peerConnection.addTrack(this.tracks[0], this.stream); //audio
+        peerConnection.addTrack(this.tracks[1], this.stream); //audio
+    }
+    private addStream = (stream: MediaStream) => {
+
         try {
             const peerConnection = this.getPeerConnection();
             if (this.trackExist(stream.getTracks()[0].id) == false) {
@@ -58,14 +65,16 @@ export default class MemberVideoStream extends Component<Props, State> {
                 peerConnection.addTrack(stream.getTracks()[0], stream); //audio
                 console.debug("tracks: ", this.tracks);
                 console.debug("WILL ADD Tracks : ", stream.getTracks());
+                this.addLog("Add Track: " + stream.getTracks()[0].kind);
             }
 
             if (this.trackExist(stream.getTracks()[1].id) == false) {
                 this.tracks.push(stream.getTracks()[1]);
                 peerConnection.addTrack(stream.getTracks()[1], stream); //video
+                this.addLog("Add Track: " + stream.getTracks()[1].kind);
             }
             this.trackAdded = true;
-
+            this.stream = stream;
         } catch (e) {
             console.error("ERROR ADD TRACK: ", e);
         }
@@ -73,21 +82,22 @@ export default class MemberVideoStream extends Component<Props, State> {
     addLog = (log: string) => {
         const logs = this.state.logs;
         logs.push(log);
-        this.setState({logs: logs});
+        this.setState({ logs: logs });
     }
-    getPeerConnection = (newInstance:boolean = false): PeerConnection => {
-        if (this.peerConnection 
-            // && newInstance != true
-            ) {
+    getPeerConnection = (newInstance: boolean = false): PeerConnection => {
+        this.addLog("getPeerConnection newInstance: " + newInstance);
+        if (this.peerConnection
+            && newInstance != true
+        ) {
             return this.peerConnection;
         }
-        console.debug("generate new RTCPeer Connection")
+        console.debug("generate new RTCPeer Connection");
+        this.tracks = [];
         const peerConnection = new PeerConnection(this.rtcConfiguration);
 
         //TODO: onaddstream is deprecated, change to ontrack
         peerConnection.ontrack = (ev: RTCTrackEvent): any => {
             console.debug("=========== ON TRACk =========");
-            console.debug("PeerConnectionthis.videoStream=> ", ev);
             console.debug("ev.track: ", ev.track);
             console.debug("stream: ", ev.streams);
             this.addLog("ON TRACK");
@@ -125,7 +135,7 @@ export default class MemberVideoStream extends Component<Props, State> {
             const state = peerConnection.signalingState;
             console.debug("PEER CONNECTION Signaling state: ", state);
             this.addLog("Peer SignalingState | " + state);
-            if (state =='stable') {
+            if (state == 'stable') {
                 console.debug("RTCPeerConnection: ", peerConnection);
             }
         }
@@ -162,18 +172,20 @@ export default class MemberVideoStream extends Component<Props, State> {
             this.videoRef.current.style.visibility = 'hidden';
         }
     }
-    createOffer = () => {
+    createOffer = (stream: MediaStream) => {
+
         const peerConnection = this.getPeerConnection(true);
+        this.addStream(stream);
         const memberCode = this.getMember().code;
         peerConnection.createOffer().then((offer: RTCSessionDescriptionInit) => {
-            this.addLog("CREATE OFFER TO :" + memberCode+ "this.trackAdded: "+ this.trackAdded);
+            this.addLog("CREATE OFFER TO :" + memberCode + "this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
             peerConnection.setLocalDescription(offer).then((value) => {
                 send(this.props.user?.code ?? "", memberCode,
                     this.getRoom().code, {
                     event: "offer",
                     data: offer
                 });
-            }).catch((e)=>this.errorSessionDescription(e, "CREATE OFFER"));
+            }).catch((e) => this.errorSessionDescription(e, "CREATE OFFER"));
             //  .updatePeerConnection(requestId,peerConnection );
         }).catch((e) => {
             console.error("ERROR CREATE OFFER: ", e);
@@ -181,21 +193,27 @@ export default class MemberVideoStream extends Component<Props, State> {
         // updatePeerConnection(requestId,peerConnection );
     }
 
-    errorSessionDescription = (error, type:string) => {
-        console.error("ERROR SET SESSION DESCRIPTION while ",type,": ", error);
+    errorSessionDescription = (error, type: string) => {
+        console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
 
-    handleOffer = (origin: string, offer) => {
-        this.addLog("GET OFFER FROM :" + origin);
-        const peerConnection = this.getPeerConnection();
-        peerConnection.setRemoteDescription(offer).then((val)=>{
+    handleOffer = (origin: string, offer, mediaStream?:MediaStream) => {
+        this.addLog("GET OFFER FROM :" + origin + ", this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
+        const peerConnection = this.getPeerConnection(true);
+        if (mediaStream) {
+            this.addStream(mediaStream);
+        } else {
+            this.addLog("GET OFFER mediaStream missing");   
+        }
+        // this.reAddStream();
+        peerConnection.setRemoteDescription(offer).then((val) => {
             this.createAnswer(origin);
         })
-        .catch((e)=>this.errorSessionDescription(e, "HANDLE OFFER")); 
-       
+            .catch((e) => this.errorSessionDescription(e, "HANDLE OFFER"));
+
     }
 
-    createAnswer = (origin:string) => {
+    createAnswer = (origin: string) => {
         const peerConnection = this.getPeerConnection();
         peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
             console.info("createAnswer to", origin);
@@ -206,20 +224,20 @@ export default class MemberVideoStream extends Component<Props, State> {
                     event: "answer",
                     data: answer
                 });
-            }).catch((e)=>this.errorSessionDescription(e, "ANSWER"));
-             
-        }).catch((e) =>  console.error("ERROR CREATE ANSWER: ", e) );
+            }).catch((e) => this.errorSessionDescription(e, "ANSWER"));
+
+        }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
     }
 
     clearLog = () => {
-       this.setState({logs: []});
+        this.setState({ logs: [] });
     }
     handleCandidate = (origin: string, candidate) => {
         this.addLog("GET CANDIDATE FROM :" + origin);
         const peerConnection = this.getPeerConnection();
         // console.debug(requestId, "handleCandidate: ", candidate);
         peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-        .catch((e)=>this.errorSessionDescription(e, "HANDLE CANDIDATE"));
+            .catch((e) => this.errorSessionDescription(e, "HANDLE CANDIDATE"));
     }
 
     handleAnswer = (origin: string, answer) => {
@@ -229,28 +247,24 @@ export default class MemberVideoStream extends Component<Props, State> {
             this.addLog("SIGNALING STATE STABLE");
         }
         peerConnection.setRemoteDescription((answer))
-         .catch((e)=>this.errorSessionDescription(e, "SET ANSWER"));
+            .catch((e) => this.errorSessionDescription(e, "SET ANSWER"));
 
     }
     redial = () => {
         this.props.redial(this.getMember().code);
     }
-    getMember = (): UserModel => {
-        return this.props.member;
-    }
-    getRoom = (): ConferenceRoomModel => {
-        return this.props.room;
-    }
+    getMember = (): UserModel => this.props.member
+    getRoom = (): ConferenceRoomModel => this.props.room;
     render() {
         if (!this.props.user) {
             console.debug("LOGGED USER: ", this.props.user);
             return <h3>NOT AUTHENTICATED</h3>
         }
         const room = this.getRoom();
-        const  member = this.getMember();
+        const member = this.getMember();
         return <div className="col-md-4 text-center">
-            <Card title={ 
-                <label>{member.displayName} {(room.isAdmin( member) ? <i className="fas fa-check"/> : "")}</label>}>
+            <Card title={
+                <label>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check" /> : "")}</label>}>
                 <div><video height={100} width={100} controls ref={this.videoRef} /></div>
                 <div className="btn-group">
                     <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-redo" onClick={this.redial} >Dial</AnchorWithIcon>
@@ -261,8 +275,8 @@ export default class MemberVideoStream extends Component<Props, State> {
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>
                 </div> */}
                 <ol className="text-left" >
-                    {this.state.logs.map((log,i)=>{ 
-                        return <li key={"log-"+i+"-"+ member.code}>
+                    {this.state.logs.map((log, i) => {
+                        return <li key={"log-" + i + "-" + member.code}>
                             <code>{log}</code>
                         </li>
                     })}
