@@ -32,7 +32,8 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
     HandshakeHandler: {};
     videoStream?: MediaStream;
-    peerToDials:string[] = new Array();
+    peerToDials: string[] = new Array();
+    offersToHandle: Map<string, any> = new Map();
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
@@ -80,7 +81,11 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     handleOffer = (origin: string, data: WebRtcObject) => {
         console.debug("HANDLE OFFER FROM : ", origin);
         this.getMemberRef(origin).then(memberStream => {
-            memberStream.handleOffer(origin, data.data, this.videoStream);
+            if (this.videoStream) {
+                memberStream.handleOffer(origin, data.data, this.videoStream);
+            } else {
+                this.offersToHandle.set(origin, data.data);
+            }
         }
         ).catch(console.error);
     }
@@ -194,16 +199,25 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
     dialPeer = (response: WebResponse) => {
         console.debug("DIAL PEER");
+        const room = this.state.room;
+        if (!room) return;
+
         const peer = response.user;
         if (!peer || peer.code == this.getLoggedUser()?.code) {
             console.debug("Prevent create Offer");
             return;
         }
-        if (!this.videoStream) {
-            this.peerToDials.push(peer.code);
-        }else {
-            this.dialPeerByCode(peer.code);
-        }
+        room.removeMember(peer);
+        doItLater(()=> {
+            room.addMember(peer);
+            this.setState({ room: room }, () => {
+                if (!this.videoStream) {
+                    this.peerToDials.push(peer.code);
+                } else {
+                    this.dialPeerByCode(peer.code);
+                }
+            });
+        }, 1000);
 
     }
     dialPeerByCode = (code: string) => {
@@ -288,7 +302,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 
     handleStream = (stream: MediaStream) => {
-       
+
         console.debug("START getUserMedia");
         if (this.videoRef.current) {
             this.videoRef.current.srcObject = stream;
@@ -304,10 +318,20 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
         this.videoStream = stream;
         this.checkDialWaiting();
-        
+
         console.debug("END getUserMedia");
     }
-   
+    checkOffersWaiting = () => {
+        this.offersToHandle.forEach((origin, data) => {
+            this.getMemberRef(origin).then(memberStream => {
+                if (this.videoStream) {
+                    memberStream.handleOffer(origin, data, this.videoStream);
+                }
+            }).catch(console.error);
+
+        })
+        this.offersToHandle.clear();
+    }
     checkDialWaiting = () => {
         if (this.peerToDials.length > 0) {
             for (let i = 0; i < this.peerToDials.length; i++) {

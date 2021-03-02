@@ -19,9 +19,7 @@ class State {
 export default class MemberVideoStream extends Component<Props, State> {
 
     trackAdded: boolean = false;
-    rtcConfiguration: any = {
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true,
+    rtcConfiguration: RTCConfiguration = {
         "iceServers": [
             { "urls": "stun:stun2.1.google.com:19302" }
             // ,{
@@ -43,13 +41,11 @@ export default class MemberVideoStream extends Component<Props, State> {
     trackExist = (id: string) => {
         for (let i = 0; i < this.tracks.length; i++) {
             const track = this.tracks[i];
-            if (track.id == id) {
-                return true;
-            }
+            if (track.id == id) { return true; }
         }
         return false;
     }
-     
+
     private addStream = (stream: MediaStream) => {
 
         try {
@@ -79,84 +75,17 @@ export default class MemberVideoStream extends Component<Props, State> {
     }
     getConnection = (newInstance: boolean = false): PeerConnection => {
         this.addLog("getPeerConnection newInstance: " + newInstance);
-        if (this.peerConnection
-            && newInstance != true
-        ) {
+        if (this.peerConnection  && newInstance != true ) {
             return this.peerConnection;
         }
         console.debug("generate new RTCPeer Connection");
-        this.tracks = [];
-        const peerConnection = new PeerConnection(this.rtcConfiguration);
-
-        //TODO: onaddstream is deprecated, change to ontrack
-        peerConnection.ontrack = (ev: RTCTrackEvent): any => {
-            console.debug("=========== ON TRACk =========");
-            console.debug("ev.track: ", ev.track);
-            console.debug("stream: ", ev.streams);
-            this.addLog("ON TRACK");
-            const vid = this.videoRef.current;
-            if (vid) {
-
-                vid.srcObject = ev.streams[0];
-                vid.style.visibility = "visible";
-                vid.addEventListener('canplay', function (ev) {
-                    this.play();
-                }, false);
-            } else {
-                console.debug("ON TRACK VIDEO NOT FOUND");
-            }
-
-            // log("PeerConnection End Add Stream => "+ requestId+" vid: "+(vid!=null));
-
-        };
-        peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-            this.addLog("onicecandidate event");
-            console.debug("peerConnection on ICE Candidate: ", event.candidate);
-            if (event.candidate) {
-                this.sendHandshake('candidate', event.candidate);
-            } else {
-                console.warn("Candiate is NULL: ", event);
-            }
-        };
-
-        peerConnection.onsignalingstatechange = (e: Event) => {
-            const state = peerConnection.signalingState;
-            console.debug("PEER CONNECTION Signaling state: ", state);
-            this.addLog("Peer SignalingState | " + state);
-            if (state == 'stable') {
-                console.debug("RTCPeerConnection: ", peerConnection);
-            }
-        }
-
-        peerConnection.ondatachannel = function (ev) {
-            console.debug("ondatachannel: ", ev);
-            // initDataChannel(ev);
-        }
-        peerConnection.onicecandidateerror = function (e) {
-            console.error("Error On Candidate: ", e);
-        }
-        peerConnection.onconnectionstatechange = (event) => {
-            console.debug("Connection State: ", peerConnection.connectionState);
-            switch (peerConnection.connectionState) {
-                case "connected":
-                    // The connection has become fully connected
-                    break;
-                case "disconnected":
-                case "failed":
-                    // One or more transports has terminated unexpectedly or in an error
-                    break;
-                case "closed":
-                    // The connection has been closed
-                    break;
-            }
-        }
-        //	peerConnection.setConfiguration([rtcConfiguration]);
-        this.peerConnection = peerConnection;
-        return peerConnection;
+        this.tracks = []; 
+        this.peerConnection = new PeerConnection(this.rtcConfiguration, this.getMember().code, this);
+        return this.peerConnection;
     }
 
-    sendHandshake = (event:string, data:any, destination?:string) => {
-        send(this.props.user.code, destination?? (this.getMember().code ?? "UNDEFINED"),
+    sendHandshake = (event: string, data: any, destination?: string) => {
+        send(this.props.user.code, destination ?? (this.getMember().code ?? "UNDEFINED"),
             this.getRoom().code, {
             event: event,
             data: data
@@ -172,16 +101,17 @@ export default class MemberVideoStream extends Component<Props, State> {
 
         const peerConnection = this.getConnection(true);
         this.addStream(stream);
-        const memberCode = this.getMember().code;
-        peerConnection.createOffer().then((offer: RTCSessionDescriptionInit) => {
-            this.addLog("CREATE OFFER TO :" + memberCode + "this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
-            peerConnection.setLocalDescription(offer).then((value) => {
-                this.sendHandshake('offer', offer);
-            }).catch((e) => this.errorSessionDescription(e, "CREATE OFFER"));
-            //  .updatePeerConnection(requestId,peerConnection );
-        }).catch((e) => {
-            console.error("ERROR CREATE OFFER: ", e);
-        });
+        peerConnection.performCreateOffer(this.trackAdded);
+        // const memberCode = this.getMember().code;
+        // peerConnection.createOffer().then((offer: RTCSessionDescriptionInit) => {
+        //     this.addLog("CREATE OFFER TO :" + memberCode + "this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
+        //     peerConnection.setLocalDescription(offer).then((value) => {
+        //         this.sendHandshake('offer', offer);
+        //     }).catch((e) => this.errorSessionDescription(e, "CREATE OFFER"));
+        //     //  .updatePeerConnection(requestId,peerConnection );
+        // }).catch((e) => {
+        //     console.error("ERROR CREATE OFFER: ", e);
+        // });
         // updatePeerConnection(requestId,peerConnection );
     }
 
@@ -189,7 +119,7 @@ export default class MemberVideoStream extends Component<Props, State> {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
 
-    handleOffer = (origin: string, offer, mediaStream?: MediaStream) => {
+    handleOffer = (origin: string, offer, mediaStream: MediaStream) => {
         this.addLog("GET OFFER FROM :" + origin + ", this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
         const peerConnection = this.getConnection(true);
         if (mediaStream) {
@@ -229,7 +159,7 @@ export default class MemberVideoStream extends Component<Props, State> {
     }
 
     clearLog = () => this.setState({ logs: [] })
-    redial = () =>  this.props.redial(this.getMember().code); 
+    redial = () => this.props.redial(this.getMember().code);
     getMember = (): UserModel => this.props.member
     getRoom = (): ConferenceRoomModel => this.props.room;
 
