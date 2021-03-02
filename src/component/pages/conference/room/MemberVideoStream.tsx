@@ -49,22 +49,15 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
         return false;
     }
-    private reAddStream = () => {
-        if (!this.stream) return;
-        const peerConnection = this.getPeerConnection();
-        peerConnection.addTrack(this.tracks[0], this.stream); //audio
-        peerConnection.addTrack(this.tracks[1], this.stream); //audio
-    }
+     
     private addStream = (stream: MediaStream) => {
 
         try {
-            const peerConnection = this.getPeerConnection();
+            const peerConnection = this.getConnection();
             if (this.trackExist(stream.getTracks()[0].id) == false) {
                 this.tracks.push(stream.getTracks()[0]);
                 // console.debug("TRACK STREAM: ", stream.get)
                 peerConnection.addTrack(stream.getTracks()[0], stream); //audio
-                console.debug("tracks: ", this.tracks);
-                console.debug("WILL ADD Tracks : ", stream.getTracks());
                 this.addLog("Add Track: " + stream.getTracks()[0].kind);
             }
 
@@ -84,7 +77,7 @@ export default class MemberVideoStream extends Component<Props, State> {
         logs.push(log);
         this.setState({ logs: logs });
     }
-    getPeerConnection = (newInstance: boolean = false): PeerConnection => {
+    getConnection = (newInstance: boolean = false): PeerConnection => {
         this.addLog("getPeerConnection newInstance: " + newInstance);
         if (this.peerConnection
             && newInstance != true
@@ -117,15 +110,10 @@ export default class MemberVideoStream extends Component<Props, State> {
 
         };
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-            console.debug("onicecandidate event: ", event);
+            this.addLog("onicecandidate event");
             console.debug("peerConnection on ICE Candidate: ", event.candidate);
-            // log("Peer IceCandidate ("+ requestId +")");
             if (event.candidate) {
-                send(this.props.user.code, this.getMember().code ?? "",
-                    this.getRoom().code, {
-                    event: "candidate",
-                    data: event.candidate
-                });
+                this.sendHandshake('candidate', event.candidate);
             } else {
                 console.warn("Candiate is NULL: ", event);
             }
@@ -167,6 +155,14 @@ export default class MemberVideoStream extends Component<Props, State> {
         return peerConnection;
     }
 
+    sendHandshake = (event:string, data:any, destination?:string) => {
+        send(this.props.user.code, destination?? (this.getMember().code ?? "UNDEFINED"),
+            this.getRoom().code, {
+            event: event,
+            data: data
+        });
+    }
+
     componentDidMount = () => {
         if (this.videoRef.current) {
             this.videoRef.current.style.visibility = 'hidden';
@@ -174,17 +170,13 @@ export default class MemberVideoStream extends Component<Props, State> {
     }
     createOffer = (stream: MediaStream) => {
 
-        const peerConnection = this.getPeerConnection(true);
+        const peerConnection = this.getConnection(true);
         this.addStream(stream);
         const memberCode = this.getMember().code;
         peerConnection.createOffer().then((offer: RTCSessionDescriptionInit) => {
             this.addLog("CREATE OFFER TO :" + memberCode + "this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
             peerConnection.setLocalDescription(offer).then((value) => {
-                send(this.props.user?.code ?? "", memberCode,
-                    this.getRoom().code, {
-                    event: "offer",
-                    data: offer
-                });
+                this.sendHandshake('offer', offer);
             }).catch((e) => this.errorSessionDescription(e, "CREATE OFFER"));
             //  .updatePeerConnection(requestId,peerConnection );
         }).catch((e) => {
@@ -197,64 +189,50 @@ export default class MemberVideoStream extends Component<Props, State> {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
 
-    handleOffer = (origin: string, offer, mediaStream?:MediaStream) => {
+    handleOffer = (origin: string, offer, mediaStream?: MediaStream) => {
         this.addLog("GET OFFER FROM :" + origin + ", this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);
-        const peerConnection = this.getPeerConnection(true);
+        const peerConnection = this.getConnection(true);
         if (mediaStream) {
             this.addStream(mediaStream);
         } else {
-            this.addLog("GET OFFER mediaStream missing");   
+            this.addLog("GET OFFER mediaStream missing");
         }
         // this.reAddStream();
         peerConnection.setRemoteDescription(offer).then((val) => {
             this.createAnswer(origin);
-        })
-            .catch((e) => this.errorSessionDescription(e, "HANDLE OFFER"));
-
+        }).catch((e) => this.errorSessionDescription(e, "HANDLE OFFER"));
     }
 
     createAnswer = (origin: string) => {
-        const peerConnection = this.getPeerConnection();
+        const peerConnection = this.getConnection();
         peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
             console.info("createAnswer to", origin);
             this.addLog("CREATE ANSWER TO :" + origin);
             peerConnection.setLocalDescription(answer).then((e) => {
-                send(this.props.user.code ?? "", origin,
-                    this.getRoom().code, {
-                    event: "answer",
-                    data: answer
-                });
+                this.sendHandshake('answer', answer, origin);
             }).catch((e) => this.errorSessionDescription(e, "ANSWER"));
 
         }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
     }
 
-    clearLog = () => {
-        this.setState({ logs: [] });
-    }
     handleCandidate = (origin: string, candidate) => {
         this.addLog("GET CANDIDATE FROM :" + origin);
-        const peerConnection = this.getPeerConnection();
-        // console.debug(requestId, "handleCandidate: ", candidate);
-        peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+        this.getConnection().addIceCandidate(new RTCIceCandidate(candidate))
             .catch((e) => this.errorSessionDescription(e, "HANDLE CANDIDATE"));
     }
 
     handleAnswer = (origin: string, answer) => {
         this.addLog("GET ANSWER FROM :" + origin);
-        const peerConnection = this.getPeerConnection();
-        if (peerConnection.signalingState == "stable") { // && this.videoStream) { 
-            this.addLog("SIGNALING STATE STABLE");
-        }
-        peerConnection.setRemoteDescription((answer))
+        this.getConnection().setRemoteDescription((answer))
             .catch((e) => this.errorSessionDescription(e, "SET ANSWER"));
 
     }
-    redial = () => {
-        this.props.redial(this.getMember().code);
-    }
+
+    clearLog = () => this.setState({ logs: [] })
+    redial = () =>  this.props.redial(this.getMember().code); 
     getMember = (): UserModel => this.props.member
     getRoom = (): ConferenceRoomModel => this.props.room;
+
     render() {
         if (!this.props.user) {
             console.debug("LOGGED USER: ", this.props.user);
@@ -274,7 +252,7 @@ export default class MemberVideoStream extends Component<Props, State> {
                     <p>local desc: {JSON.stringify(this.getPeerConnection().localDescription)}</p>
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>
                 </div> */}
-                <ol className="text-left" >
+                <ol className="text-left" style={{ fontSize: '0.7em', color: '#000000' }}>
                     {this.state.logs.map((log, i) => {
                         return <li key={"log-" + i + "-" + member.code}>
                             <code>{log}</code>
