@@ -32,6 +32,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
     HandshakeHandler: {};
     videoStream?: MediaStream;
+    peerToDials:string[] = new Array();
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
@@ -100,6 +101,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     componentWillUnmount() {
         this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
         removeWSOnConnecCallback('USER_JOIN');
+        this.cleanResources();
+    }
+    cleanResources = () => {
+        if (!this.videoStream) return;
+        for (let i = 0; i < this.videoStream.getTracks().length; i++) {
+            this.videoStream?.getTracks()[i].stop();
+
+        }
     }
     recordLoaded = (response: WebResponse) => {
         this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) }, this.initialize);
@@ -143,21 +152,24 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             console.debug("realtimeHandshake object not found");
             return;
         }
-        console.debug("webRtcHandshake: ", handshakeObject.webRtcObject.event, " FROM ", handshakeObject?.origin);
         if (handshakeObject.origin == this.getLoggedUser()?.code) {
             return;
         }
         this.handleWebRtcHandshake(handshakeObject.eventId, handshakeObject.origin, handshakeObject.webRtcObject);
     }
     handleWebRtcHandshake = (eventId: string, origin: string, webRtcObject: WebRtcObject) => {
-        console.debug("handleWebRtcHandshake: (", eventId, ")", webRtcObject.event);
+        console.info("webRtcHandshake: ", webRtcObject.event, " FROM ", origin);
+
         if (!this.HandshakeHandler[webRtcObject.event]) {
             console.warn("Handler for ", webRtcObject.event, " NOT FOUND");
             return;
         }
         this.HandshakeHandler[webRtcObject.event](origin, webRtcObject);
         if (this.videoStream) {
+            console.info("handleStream ", webRtcObject.event);
             this.handleStream(this.videoStream);
+        } else {
+            console.info("VIDEO STREAM NOT AVAILABLE for : ", webRtcObject.event);
         }
     }
     wsSubscriptionCallback = (response: WebResponse) => {
@@ -187,29 +199,34 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             console.debug("Prevent create Offer");
             return;
         }
-        this.dialPeerByCode(peer.code);
+        if (!this.videoStream) {
+            this.peerToDials.push(peer.code);
+        }else {
+            this.dialPeerByCode(peer.code);
+        }
 
     }
     dialPeerByCode = (code: string) => {
         const ref = this.memberRefs.get(code);
-        if (!ref || !ref.current) {
-            console.debug("MEMBER REF NOT FOUND");
+
+        if (!ref || !ref.current || code == this.getLoggedUser()?.code) {
+            console.warn("DIAL MEMBER not allowed");
             return;
         }
         console.debug("Will Create OFFER to: ", code);
-        ref.current.createOffer(code);
+        ref.current.createOffer();
     }
     addNewRoomMember = (response: WebResponse) => {
         const room = this.state.room;
-        if (!room || !response.user) return;
-        room.addMember(response.user);
-        this.updateRoomState(room);
+        if (room && response.user) {
+            this.updateRoomState(room.addMember(response.user));
+        }
     }
     removeRoomMember = (response: WebResponse) => {
         const room = this.state.room;
-        if (!room || !response.user) return;
-        room.removeMember(response.user);
-        this.updateRoomState(room);
+        if (room && response.user) {
+            this.updateRoomState(room.removeMember(response.user));
+        }
     }
     updateRoomState = (room: ConferenceRoomModel) => {
         this.setState({ room: Object.assign(new ConferenceRoomModel, room) });
@@ -222,7 +239,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             this.backToRoomMain();
             return;
         }
-        console.debug("this.props.location.state: ", this.props.location.state);
         const roomCode = this.props.location.state.roomCode;
         if (roomCode) {
             document.title = "ROOM: " + roomCode;
@@ -261,15 +277,16 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         // } else {
         // 	mediaStream = window.navigator.mediaDevices.getDisplayMedia(config)
         // }
+
         mediaStream
             .then((stream: MediaStream) => { this.handleStream(stream) })
             .catch(console.error);
+
     }
 
     handleStream = (stream: MediaStream) => {
-        this.videoStream = stream;
+       
         console.debug("START getUserMedia");
-        // log("Start handle user media");
         if (this.videoRef.current) {
             this.videoRef.current.srcObject = stream;
         } else {
@@ -282,8 +299,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             }, 1000);
             console.debug("this.videoRef.current not found, retrying in 1 sec");
         }
-        // var peerCount = 0;
-        // for (var key in peerConnections) {
         this.memberRefs.forEach((ref, key) => {
             if (key != this.getLoggedUser()?.getCode()) {
                 if (ref.current) {
@@ -292,23 +307,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             }
 
         })
-        //     const entry = peerConnections[key];
-        //     if (null == entry) continue;
-        //     if (isUserRequestId(key)) {
-
-        //     } else {
-
-        //         const peerConnection = entry['connection'];
-        //         if (!peerConnection.getLocalStreams() || peerConnection.getLocalStreams().length == 0) {
-        //             peerConnections[key]['connection'].addStream(stream);
-        //         }
-        //         //updatePeerConnection(key, peerConnection);
-        //         peerCount++;
-        //     }
-
-        // }
+        if (this.peerToDials.length > 0) {
+            for (let i = 0; i < this.peerToDials.length; i++) {
+                const element = this.peerToDials[i];
+                this.dialPeerByCode(element);
+            }
+            this.peerToDials = [];
+        }
+        this.videoStream = stream;
         console.debug("END getUserMedia");
-        // log("End HandleMedia peerCount: " + peerCount);
     }
     leaveRoom = () => {
         if (!this.state.roomCode) return;

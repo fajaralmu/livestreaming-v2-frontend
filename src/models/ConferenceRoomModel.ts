@@ -1,21 +1,23 @@
 import UserModel from './UserModel';
 import BaseModel from './BaseModel';
+import { uniqueId } from './../utils/StringUtil';
 
 export default class ConferenceRoomModel extends BaseModel{
     
-	code?:string;
+	code:string = uniqueId();
 	active:boolean = false;
 	user?:UserModel;
 	members:any[] =[];
 	chats?:any[];
-	addMember = (user: UserModel) => {
-        this.members.push(user);
+	addMember = (user: UserModel) :ConferenceRoomModel => {
+		this.members.push(user);
+		return this;
     }
 	isAdmin = (user:UserModel|undefined) => {
 		if (!user) return false;
 		return this.user?.id == user.id;
 	}
-	removeMember = (memberToRemove:UserModel) => {
+	removeMember = (memberToRemove:UserModel) :ConferenceRoomModel=> {
 		for (let i = 0; i < this.members.length; i++) {
 			const member = this.members[i];
 			if (memberToRemove.code == member.code) {
@@ -23,6 +25,7 @@ export default class ConferenceRoomModel extends BaseModel{
 				break;
 			}
 		}
+		return this;
 	}
 
 }
