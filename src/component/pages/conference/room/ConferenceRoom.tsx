@@ -28,12 +28,16 @@ class ConferenceRoom extends BaseMainMenus {
         this.publicConferenceService = this.getServices().publicConferenceService;
     }
     recordLoaded = (response: WebResponse) => {
+        if (this.hasCodeOnURI()) {
+            this.enterRoom();
+            return;
+        }
         this.setState({ room: response.conferenceRoom });
     }
     startLoading = () => { this.setState({ loading: true }) }
     endLoading = () => { this.setState({ loading: false }) }
-    getRoom = (e: FormEvent) => {
-        e.preventDefault();
+    getRoom = (e?: FormEvent) => {
+        if (e) { e.preventDefault(); }
         if (!this.state.roomCode) {
 
             return;
@@ -52,9 +56,19 @@ class ConferenceRoom extends BaseMainMenus {
             state: { roomCode:this.state.roomCode }
         })
     }
+    componentDidMount () {
+        super.componentDidMount();
+        if (this.hasCodeOnURI()) {
+            this.setState({roomCode: this.props.match.params.code}, this.getRoom);
+        }
+    }
+    hasCodeOnURI = () => {
+        return  this.props.match.params.code != undefined;
+    }
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
+        
         return (
             <div id="ConferenceRoom" className="section-body container-fluid" >
                 <h2>Conference Room</h2>

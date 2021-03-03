@@ -92,6 +92,10 @@ const Conference = (props) => {
                 (props: any) =>
                     <ConferenceRoom />
             } />
+             <Route exact path="/conference/room/:code" render={
+                (props: any) =>
+                    <ConferenceRoom />
+            } />
             <Route exact path="/conference/enterroom" render={
                 (props: any) =>
                     <ConferenceRoomSteaming />
