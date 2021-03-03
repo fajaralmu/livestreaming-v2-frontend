@@ -250,9 +250,10 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         if (!this.videoStream) {
             console.warn("Cannot dial all peer, video stream is missing");
         }
-        this.memberRefs.forEach((ref, code) => {
-            this.dialPeerByCode(code);
-        });
+        this.notifyUserEnterRoom();
+        // this.memberRefs.forEach((ref, code) => {
+        //     this.dialPeerByCode(code);
+        // });
     }
     addNewRoomMember = (response: WebResponse) => {
         const room = this.state.room;
@@ -339,7 +340,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.videoStream = stream;
         this.videoStreamError = false;
         this.checkDialWaiting();
-
+        this.checkOffersWaiting();
         console.debug("END getUserMedia");
     }
     checkOffersWaiting = () => {
@@ -378,12 +379,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         return (
             <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
                 <h2>STREAMING Room</h2>
-                <div className="alert alert-info">
+                <div className="alert alert-info"  >
                     Welcome, <strong>{user.displayName}  </strong>
+                    
                 </div>
-                {this.state.loading ?
-                    <Spinner /> :
-                    this.state.room ?
+                {this.state.loading ? <Spinner style={{zIndex:1000,position:'absolute', width:'100%', marginTop: 20}}  />
+                
+                : null}
+                   {this.state.room ?
                         <Fragment>
                             <RoomInfo videoRef={this.videoRef} redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
