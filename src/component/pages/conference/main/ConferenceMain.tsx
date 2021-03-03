@@ -30,7 +30,9 @@ class ConferenceMain extends BaseMainMenus {
     }
 
     recordLoaded = (response: WebResponse) => {
-        this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) });
+        if (response.conferenceRoom) {
+            this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) });
+        }
     }
     startLoading = () => { this.setState({ loading: true }) }
     endLoading = () => { this.setState({ loading: false }) }
