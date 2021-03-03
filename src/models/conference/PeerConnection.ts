@@ -1,5 +1,15 @@
 
 import MemberVideoStream from '../../component/pages/conference/room/MemberVideoStream';
+const config: RTCConfiguration = {
+        "iceServers": [
+            { "urls": "stun:stun2.1.google.com:19302" }
+            // ,{
+            //       "urls":"${iceTurnServer.url}",
+            //       "username": "${iceTurnServer.username}",
+            //       "credential":"${iceTurnServer.password}"
+            //     }
+        ]
+    };
 export default class PeerConnection extends RTCPeerConnection {
     performCreateAnswer(origin: string) {
 
@@ -18,7 +28,7 @@ export default class PeerConnection extends RTCPeerConnection {
     created: Date = new Date();
     updated?: Date;
     private component: MemberVideoStream;
-    constructor(config: RTCConfiguration, memberCode: string, comp: MemberVideoStream) {
+    constructor( memberCode: string, comp: MemberVideoStream) {
         super(config);
         this.memberCode = memberCode;
         this.component = comp;

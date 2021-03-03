@@ -85,9 +85,8 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     handleOffer = (origin: string, data: WebRtcObject) => {
         console.debug("HANDLE OFFER FROM : ", origin);
         this.getMemberRef(origin).then(memberStream => {
-            if (this.videoStream) {
-                memberStream.handleOffer(origin, data.data, this.videoStream);
-            } else {
+            memberStream.handleOffer(origin, data.data, this.videoStream);
+            if (!this.videoStream) {
                 this.offersToHandle.set(origin, data.data);
             }
         }
