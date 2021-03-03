@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import Card from './../../../container/Card';
 import UserModel from './../../../../models/UserModel';
 import ConferenceRoomModel from './../../../../models/ConferenceRoomModel';
@@ -6,6 +6,8 @@ import { uniqueId } from './../../../../utils/StringUtil';
 import { sendToWebsocket } from './../../../../utils/websockets';
 import PeerConnection from '../../../../models/conference/PeerConnection';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
+import HandshakeLog from './HandshakeLog';
+import ToggleButton from '../../../navigation/ToggleButton';
 interface Props {
     user: UserModel,
     member: UserModel,
@@ -14,10 +16,11 @@ interface Props {
 }
 class State {
     videoVisible: boolean = false;
-    logs: string[] = [];
+    showLog:boolean= false;
 }
 export default class MemberVideoStream extends Component<Props, State> {
 
+    state:State = new State();
     trackAdded: boolean = false;
     rtcConfiguration: RTCConfiguration = {
         "iceServers": [
@@ -31,7 +34,7 @@ export default class MemberVideoStream extends Component<Props, State> {
     };
 
     peerConnection?: PeerConnection;
-    state: State = new State();
+    logRef: React.RefObject<HandshakeLog> = React.createRef();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
     tracks: MediaStreamTrack[] = new Array();
     stream?: MediaStream;
@@ -47,7 +50,6 @@ export default class MemberVideoStream extends Component<Props, State> {
     }
 
     private addStream = (stream: MediaStream) => {
-
         try {
             const peerConnection = this.getConnection();
             if (this.trackExist(stream.getTracks()[0].id) == false) {
@@ -69,17 +71,17 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
     }
     addLog = (log: string) => {
-        const logs = this.state.logs;
-        logs.push(log);
-        this.setState({ logs: logs });
+        if (this.logRef.current) {
+            this.logRef.current.addLog(log);
+        }
     }
     getConnection = (newInstance: boolean = false): PeerConnection => {
         this.addLog("getPeerConnection newInstance: " + newInstance);
-        if (this.peerConnection  && newInstance != true ) {
+        if (this.peerConnection && newInstance != true) {
             return this.peerConnection;
         }
         console.debug("generate new RTCPeer Connection");
-        this.tracks = []; 
+        this.tracks = [];
         this.peerConnection = new PeerConnection(this.rtcConfiguration, this.getMember().code, this);
         return this.peerConnection;
     }
@@ -98,11 +100,9 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
     }
     createOffer = (stream: MediaStream) => {
-
         const peerConnection = this.getConnection(true);
         this.addStream(stream);
         peerConnection.performCreateOffer(this.trackAdded);
-       
     }
 
     errorSessionDescription = (error, type: string) => {
@@ -126,14 +126,6 @@ export default class MemberVideoStream extends Component<Props, State> {
     createAnswer = (origin: string) => {
         const peerConnection = this.getConnection();
         peerConnection.performCreateAnswer(origin);
-        // peerConnection.createAnswer().then((answer: RTCSessionDescriptionInit) => {
-        //     console.info("createAnswer to", origin);
-        //     this.addLog("CREATE ANSWER TO :" + origin);
-        //     peerConnection.setLocalDescription(answer).then((e) => {
-        //         this.sendHandshake('answer', answer, origin);
-        //     }).catch((e) => this.errorSessionDescription(e, "ANSWER"));
-
-        // }).catch((e) => console.error("ERROR CREATE ANSWER: ", e));
     }
 
     handleCandidate = (origin: string, candidate) => {
@@ -149,7 +141,8 @@ export default class MemberVideoStream extends Component<Props, State> {
 
     }
 
-    clearLog = () => this.setState({ logs: [] })
+    toggleLog = (show:boolean) =>{this.setState({showLog: show})}
+    isCurrentUser = (): boolean => this.props.user.code == this.props.member.code;
     redial = () => this.props.redial(this.getMember().code);
     getMember = (): UserModel => this.props.member
     getRoom = (): ConferenceRoomModel => this.props.room;
@@ -164,22 +157,22 @@ export default class MemberVideoStream extends Component<Props, State> {
         return <div className="col-md-4 text-center">
             <Card title={
                 <label>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check" /> : "")}</label>}>
-                <div><video height={100} width={100} controls ref={this.videoRef} /></div>
-                <div className="btn-group">
-                    <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-redo" onClick={this.redial} >Dial</AnchorWithIcon>
-                    <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-trash" onClick={this.clearLog} >Clear Log</AnchorWithIcon>
-                </div>
+                <div>
+                    {this.isCurrentUser() ?
+                        <h2>You</h2> :
+                        <Fragment>
+                            <video height={100} width={100} controls ref={this.videoRef} />
+                            <br />
+                            <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-phone" onClick={this.redial} >Dial</AnchorWithIcon>
+                        </Fragment>
+                    }</div>
+
                 {/* <div>
                     <p>local desc: {JSON.stringify(this.getPeerConnection().localDescription)}</p>
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>
                 </div> */}
-                <ol className="text-left" style={{ fontSize: '0.7em', color: '#000000' }}>
-                    {this.state.logs.map((log, i) => {
-                        return <li key={"log-" + i + "-" + member.code}>
-                            <code>{log}</code>
-                        </li>
-                    })}
-                </ol>
+                <ToggleButton yesLabel="Show Log" active={this.state.showLog} onClick={this.toggleLog} noLabel="Hide Log" />
+                <HandshakeLog show={this.state.showLog} ref={this.logRef} />
             </Card></div>
 
     }
