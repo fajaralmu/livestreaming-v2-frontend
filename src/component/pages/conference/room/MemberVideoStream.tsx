@@ -95,6 +95,10 @@ export default class MemberVideoStream extends Component<Props, State> {
     errorSessionDescription = (error, type: string) => {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
+    notifyCallTo = () => {
+        this.addLog("REQUEST CALLING FROM :" +this.getMember().code);
+        this.sendHandshake('dial', {});
+    }
 
     handleOffer = (origin: string, offer, mediaStream?: MediaStream) => {
         this.addLog("GET OFFER FROM :" + origin + ", this.trackAdded: " + this.trackAdded + " > " + this.tracks.length);

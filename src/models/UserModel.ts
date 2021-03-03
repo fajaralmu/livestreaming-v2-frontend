@@ -3,6 +3,9 @@ import BaseModel from './BaseModel';
 import { uniqueId } from './../utils/StringUtil';
 
 export default class UserModel extends BaseModel{
+    static clone(user: UserModel): UserModel {
+        return Object.assign(new UserModel, user);
+    }
 	username?:string;
 	displayName?:string;
 	editPassword?:string;

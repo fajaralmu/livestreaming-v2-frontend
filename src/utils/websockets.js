@@ -17,9 +17,14 @@ export const sendToWebsocket = (url, requestObject) => {
 		console.info("Connecting");
 		return false;
 	}
-	console.debug("SEND WEBSOCKET")
+	console.debug("SEND WEBSOCKET");
+	try {
 	stompClient.send(url, {}, JSON.stringify(requestObject));
 	return true;
+	} catch (e) {
+		console.error("ERROR SEND WEBSOCKET TO", url, e);
+		return false;
+	}
 }
 export const removeOnConnecCallbacks = (...ids) => {
 	for (let i = 0; i < ids.length; i++) {

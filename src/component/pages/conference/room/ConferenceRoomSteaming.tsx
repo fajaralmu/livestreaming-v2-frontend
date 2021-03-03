@@ -55,6 +55,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             "candidate": (origin: string, data: WebRtcObject) => {
                 this.handleCandidate(origin, data);
             },
+            "dial": (origin: string, data: WebRtcObject) => {
+                this.handleDial(origin, data);
+            },
         };
     }
     getMemberRef = (code: string): Promise<MemberVideoStream> => {
@@ -79,6 +82,17 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             }
             resolve(memberRef.current);
         })
+    }
+    handleDial = (origin: string, data: WebRtcObject) => {
+        console.debug("HANDLE ",data.event," FROM : ", origin);
+        this.getMemberRef(origin).then(ref => {
+            if (this.videoStream) {
+                ref.createOffer(this.videoStream);
+            } else {
+                this.offersToHandle.set(origin, data.data);
+            }
+           
+        });
     }
     handleOffer = (origin: string, data: WebRtcObject) => {
         console.debug("HANDLE ",data.event," FROM : ", origin);
@@ -240,21 +254,13 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
         if (!this.videoStream) {
             //videoStreamError == true
-            this.notifyUserEnterRoom();
+            ref.current.notifyCallTo( ); 
             return;
         }
         console.debug("Will Create OFFER to: ", code);
         ref.current.createOffer(this.videoStream);
     }
-    dialAllMember = () => {
-        if (!this.videoStream) {
-            console.warn("Cannot dial all peer, video stream is missing");
-        }
-        this.notifyUserEnterRoom();
-        // this.memberRefs.forEach((ref, code) => {
-        //     this.dialPeerByCode(code);
-        // });
-    }
+    
     addNewRoomMember = (response: WebResponse) => {
         const room = this.state.room;
         if (room && response.user) {
@@ -317,8 +323,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 console.error("ERROR INIT MEDIA STREAM: ", e);
                 this.videoStreamError = true;
                 this.setState({errorMessage: new String(e).toString()})
-            });
-        // }
+            }); 
 
     }
 
@@ -380,15 +385,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
                 <h2>STREAMING Room</h2>
                 <div className="alert alert-info"  >
-                    Welcome, <strong>{user.displayName}  </strong>
-                    
+                    Welcome, <strong>{user.displayName}  </strong> 
                 </div>
                 {this.state.loading ? <Spinner style={{zIndex:1000,position:'absolute', width:'100%', marginTop: 20}}  />
                 
                 : null}
                    {this.state.room ?
                         <Fragment>
-                            <RoomInfo videoRef={this.videoRef} redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
+                            <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
                             <p/>
                             {this.state.errorMessage? 
@@ -398,7 +402,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                             <Card>
                                 <div className="row">
                                     {this.state.room.members.map((member: User, i) => {
-                                        member = Object.assign(new UserModel, member);
+                                        member = UserModel.clone(member);
                                         if (!this.memberRefs.get(member.getCode())) {
                                             this.memberRefs.set(member.getCode(), React.createRef());
                                         }
