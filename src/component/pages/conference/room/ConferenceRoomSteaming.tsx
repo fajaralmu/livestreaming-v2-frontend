@@ -19,15 +19,15 @@ import UserModel from './../../../../models/UserModel';
 import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
-enum StreamType{
- CAMERA, SCREEN
+enum StreamType {
+    CAMERA, SCREEN
 }
 const PEER_NEW = "PEER_NEW", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
     roomCode?: string;
     room?: ConferenceRoomModel;
     loading: boolean = false;
-    streamType:StreamType = StreamType.CAMERA;
+    streamType: StreamType = StreamType.CAMERA;
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
@@ -108,32 +108,32 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         ).catch(console.error);
     }
     componentWillUnmount() {
+        console.debug("WILL UNMOUNT");
         this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
         removeWSOnConnecCallback('USER_JOIN');
+        removeWSOnConnecCallback('INIT_MEDIA_STREAM');
         this.cleanResources();
     }
     cleanResources = () => {
         if (!this.videoStream) return;
+        console.debug("this.videoStream.getTracks(): ", this.videoStream.getTracks());
         for (let i = 0; i < this.videoStream.getTracks().length; i++) {
-            this.videoStream?.getTracks()[i].stop();
-
+            this.videoStream.getTracks()[i].stop(); 
+            console.debug("Clean track : ", this.videoStream.getTracks()[i].kind);
         }
     }
     recordLoaded = (response: WebResponse) => {
         this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) }, this.initialize);
     }
-    initialize = () => {
-        this.initWebsocketCallback();
-        this.addOnWsConnectCallbacks({
-            id: "INIT_MEDIA_STREAM", callback: this.initMediaStream
-        });
-    }
-    initWebsocketCallback = () => {
-
+    initialize  = () => {
         //subscription
         this.addOnWsConnectCallbacks({
             id: 'USER_JOIN',
             callback: this.notifyUserEnterRoom
+        },
+        {
+            id: "INIT_MEDIA_STREAM", 
+            callback: this.initMediaStream
         });
         //on connect
         this.addWebsocketSubscriptionCallback({
@@ -248,7 +248,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         if (!this.videoStream) {
             console.warn("Cannot dial all peer, video stream is missing");
         }
-        this.memberRefs.forEach((ref, code)=> {
+        this.memberRefs.forEach((ref, code) => {
             this.dialPeerByCode(code);
         });
     }
@@ -309,7 +309,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         const config = { video: true, audio: true };
         let mediaStream: Promise<MediaStream>;
         // if (this.state.streamType = StreamType.CAMERA) {
-          mediaStream = window.navigator.mediaDevices.getUserMedia(config)
+        mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         // } else {
         // 	// window.navigator.mediaDevices.get
         // }
@@ -353,13 +353,12 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.offersToHandle.clear();
     }
     checkDialWaiting = () => {
-        if (this.peerToDials.length > 0) {
-            for (let i = 0; i < this.peerToDials.length; i++) {
-                const element = this.peerToDials[i];
-                this.dialPeerByCode(element);
-            }
-            this.peerToDials = [];
+        if (this.peerToDials.length == 0) return;
+        for (let i = 0; i < this.peerToDials.length; i++) {
+            const element = this.peerToDials[i];
+            this.dialPeerByCode(element);
         }
+        this.peerToDials = [];
     }
     leaveRoom = () => {
         if (!this.state.roomCode) return;
@@ -392,7 +391,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                     this.state.room ?
                         <Fragment>
                             <video muted ref={this.videoRef} height="200" width={200} controls />
-                            <RoomInfo redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user} 
+                            <RoomInfo redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
 
                             {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
@@ -418,7 +417,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { redialAll():any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
+const RoomInfo = (props: { redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
     const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
         <Card>
@@ -427,32 +426,12 @@ const RoomInfo = (props: { redialAll():any, memberRefs: Map<string, RefObject<Me
             <FormGroup>
                 <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
                     {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
-                    <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
+                <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
                     Redial</AnchorWithIcon>
             </FormGroup>
         </Card>
     )
 }
-
-// const MemberList = (props: {  memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, members: User[], room: ConferenceRoomModel, }) => {
-//     const memberRefs = props.memberRefs;
-//     return (
-//         <Card>
-//             <div className="row">
-//                 {props.members.map((member, i) => {
-//                     if (!memberRefs.get(member.code)) {
-//                         memberRefs.set(member.code, React.createRef());
-//                     }
-//                     return (
-//                         <MemberVideoStream redial={props.dialPeer} ref={memberRefs.get(member.code)} user={props.user}
-//                             member={member}
-//                             room={props.room} key={"vid-stream-" + member.code} />
-//                     )
-//                 })}
-//             </div>
-//         </Card>
-//     )
-// }
 
 export default withRouter(connect(
     mapCommonUserStateToProps
