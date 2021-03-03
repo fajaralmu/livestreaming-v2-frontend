@@ -19,6 +19,7 @@ import UserModel from './../../../../models/UserModel';
 import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
+import SimpleError from '../../../alert/SimpleError';
 enum StreamType {
     CAMERA, SCREEN
 }
@@ -28,20 +29,23 @@ class State {
     room?: ConferenceRoomModel;
     loading: boolean = false;
     streamType: StreamType = StreamType.CAMERA;
+    errorMessage?:string;
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
     publicConferenceService: PublicConferenceService;
     memberRefs: Map<string, React.RefObject<MemberVideoStream>> = new Map();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
-    HandshakeHandler: {};
+    handshakeHandler:  Record<string,(origin: string, data: WebRtcObject)=>void>;
     videoStream?: MediaStream;
+    videoStreamError:boolean = false;
     peerToDials: string[] = new Array();
-    offersToHandle: Map<string, any> = new Map();
+    offersToHandle: Map<string, WebRtcObject> = new Map();
+    
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
-        this.HandshakeHandler = {
+        this.handshakeHandler  = {
             "offer": (origin: string, data: WebRtcObject) => {
                 this.handleOffer(origin, data);
             },
@@ -51,12 +55,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             "candidate": (origin: string, data: WebRtcObject) => {
                 this.handleCandidate(origin, data);
             },
-            // "leave" :  (requestId, data) => {
-            // 	handlePartnerLeave(data);
-            // },
-            // "dial" :  (requestId, data) =>{
-            // 	handlePartnerDial(requestId);
-            // }
         };
     }
     getMemberRef = (code: string): Promise<MemberVideoStream> => {
@@ -83,28 +81,25 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         })
     }
     handleOffer = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE OFFER FROM : ", origin);
-        this.getMemberRef(origin).then(memberStream => {
-            memberStream.handleOffer(origin, data.data, this.videoStream);
+        console.debug("HANDLE ",data.event," FROM : ", origin);
+        this.getMemberRef(origin).then(ref => {
+            ref.handleOffer(origin, data.data, this.videoStream);
             if (!this.videoStream) {
                 this.offersToHandle.set(origin, data.data);
             }
-        }
-        ).catch(console.error);
+        }).catch(console.error);
     }
     handleAnswer = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE ANSWER FROM : ", origin);
-        this.getMemberRef(origin).then(memberStream => {
-            memberStream.handleAnswer(origin, data.data);
-        }
-        ).catch(console.error);
+        console.debug("HANDLE ",data.event," FROM : ", origin);
+        this.getMemberRef(origin).then(ref => {
+            ref.handleAnswer(origin, data.data);
+        }).catch(console.error);
     }
     handleCandidate = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE CANDIDATE FROM : ", origin);
-        this.getMemberRef(origin).then(memberStream => {
-            memberStream.handleCandidate(origin, data.data);
-        }
-        ).catch(console.error);
+        console.debug("HANDLE ",data.event," FROM : ", origin);
+        this.getMemberRef(origin).then(ref => {
+            ref.handleCandidate(origin, data.data);
+        }).catch(console.error);
     }
     componentWillUnmount() {
         console.debug("WILL UNMOUNT");
@@ -115,13 +110,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     cleanResources = () => {
         if (!this.videoStream) return;
         console.debug("this.videoStream.getTracks(): ", this.videoStream.getTracks());
-        for (let i = 0; i < this.videoStream.getTracks().length; i++) {
-            this.videoStream.getTracks()[i].stop();
-            console.debug("Clean track : ", this.videoStream.getTracks()[i].kind);
-        }
+        this.videoStream.getTracks().forEach(stream=>{
+            stream.stop();
+            console.debug("Clean track : ", stream.kind);
+        })
     }
     recordLoaded = (response: WebResponse) => {
-        this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) }, this.initialize);
+        if (response.conferenceRoom) {
+            this.setState({ room:ConferenceRoomModel.clone(response.conferenceRoom) }, this.initialize);
+        } else {console.error("ROOM NOT FOUND")}
     }
     initialize = () => {
         //subscription
@@ -129,10 +126,10 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             id: 'USER_JOIN',
             callback: this.notifyUserEnterRoom
         },
-            {
-                id: "INIT_MEDIA_STREAM",
-                callback: this.initMediaStream
-            });
+        {
+            id: "INIT_MEDIA_STREAM",
+            callback: this.initMediaStream
+        });
         //on connect
         this.addWebsocketSubscriptionCallback({
             id: 'CONFERENCE_STREAMING',
@@ -167,11 +164,11 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     handleWebRtcHandshake = (eventId: string, origin: string, webRtcObject: WebRtcObject) => {
         console.info("webRtcHandshake: ", webRtcObject.event, " FROM ", origin);
 
-        if (!this.HandshakeHandler[webRtcObject.event]) {
+        if (!this.handshakeHandler[webRtcObject.event]) {
             console.warn("Handler for ", webRtcObject.event, " NOT FOUND");
             return;
         }
-        this.HandshakeHandler[webRtcObject.event](origin, webRtcObject);
+        this.handshakeHandler[webRtcObject.event](origin, webRtcObject);
         if (this.videoStream) {
             console.info("handleStream ", webRtcObject.event);
             this.handleStream(this.videoStream);
@@ -200,15 +197,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
     dialPeer = (response: WebResponse) => {
-        console.debug("DIAL PEER");
         const room = this.state.room;
         if (!room) return;
 
         const peer = response.user;
         if (!peer || peer.code == this.getLoggedUser()?.code) {
-            console.debug("Prevent create Offer");
+            console.info("Prevent Dial MEMBER: ", peer?.code);
             return;
         }
+        console.info("DIAL MEMBER: ", peer.code);
         room.removeMember(peer);
         this.setState({ room: room }, () => {
             this.reAddMemberAndDial(peer);
@@ -221,7 +218,8 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         // doItLater(() => {
         room.addMember(peer);
         this.setState({ room: room }, () => {
-            if (!this.videoStream) {
+            if (!this.videoStream && this.videoStreamError == false) {
+                console.info("PUSH ", peer.code," TO WAITING");
                 this.peerToDials.push(peer.code);
             } else {
                 this.dialPeerByCode(peer.code);
@@ -235,8 +233,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             console.warn("DIAL MEMBER not allowed");
             return;
         }
-        if (!this.videoStream) {
+        if (!this.videoStream && this.videoStreamError == false) {
             this.peerToDials.push(code);
+            return;
+        }
+
+        if (!this.videoStream) {
+            //videoStreamError == true
+            this.notifyUserEnterRoom();
             return;
         }
         console.debug("Will Create OFFER to: ", code);
@@ -263,7 +267,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
     updateRoomState = (room: ConferenceRoomModel) => {
-        this.setState({ room: Object.assign(new ConferenceRoomModel, room) });
+        this.setState({ room:ConferenceRoomModel.clone(room) });
     }
     backToRoomMain = () => {
         this.props.history.push("/conference/room");
@@ -305,16 +309,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
     initMediaStream = () => {
         const config = { video: true, audio: true };
-        let mediaStream: Promise<MediaStream>;
-        // if (this.state.streamType = StreamType.CAMERA) {
-        mediaStream = window.navigator.mediaDevices.getUserMedia(config)
-        // } else {
-        // 	// window.navigator.mediaDevices.get
-        // }
-        // if (mediaStream) {
+        let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
             .then((stream: MediaStream) => { this.handleStream(stream) })
-            .catch(console.error);
+            .catch((e:any)=>{
+                console.error("ERROR INIT MEDIA STREAM: ", e);
+                this.videoStreamError = true;
+                this.setState({errorMessage: new String(e).toString()})
+            });
         // }
 
     }
@@ -335,27 +337,22 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             console.debug("this.videoRef.current not found, retrying in 1 sec");
         }
         this.videoStream = stream;
+        this.videoStreamError = false;
         this.checkDialWaiting();
 
         console.debug("END getUserMedia");
     }
     checkOffersWaiting = () => {
-        this.offersToHandle.forEach((origin, data) => {
-            this.getMemberRef(origin).then(memberStream => {
-                if (this.videoStream) {
-                    memberStream.handleOffer(origin, data, this.videoStream);
-                }
-            }).catch(console.error);
-
+        this.offersToHandle.forEach((data, origin) => {
+            this.handleOffer(origin, data);
         })
         this.offersToHandle.clear();
     }
     checkDialWaiting = () => {
         if (this.peerToDials.length == 0) return;
-        for (let i = 0; i < this.peerToDials.length; i++) {
-            const element = this.peerToDials[i];
-            this.dialPeerByCode(element);
-        }
+        this.peerToDials.forEach(memberCode=>{
+            this.dialPeerByCode(memberCode);
+        })
         this.peerToDials = [];
     }
     leaveRoom = () => {
@@ -391,6 +388,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                             <RoomInfo videoRef={this.videoRef} redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
                             <p/>
+                            {this.state.errorMessage? 
+                            <SimpleError>Error: {this.state.errorMessage}</SimpleError>
+                            :null}
                             {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
                             <Card>
                                 <div className="row">
@@ -415,7 +415,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 }
 
 const RoomInfo = (props: { videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
-    const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
+    const room: ConferenceRoomModel = ConferenceRoomModel.clone(props.room);
     return (
         <Card >
             <div className="row">

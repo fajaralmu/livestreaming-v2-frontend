@@ -14,7 +14,7 @@ export default class PeerConnection extends RTCPeerConnection {
     performCreateAnswer(origin: string) {
 
         this.createAnswer().then((answer: RTCSessionDescriptionInit) => {
-            console.info("createAnswer to", origin);
+            
             this.component.addLog("CREATE ANSWER TO :" + origin);
             this.setLocalDescription(answer).then((e) => {
                 this.component.sendHandshake('answer', answer, origin);
@@ -73,12 +73,12 @@ export default class PeerConnection extends RTCPeerConnection {
             }
         }
 
-        this.ondatachannel = function (ev) {
-            console.debug("ondatachannel: ", ev);
+        this.ondatachannel =   (e) => {
+            console.debug("ondatachannel: ", this.memberCode, e);
             // initDataChannel(ev);
         }
-        this.onicecandidateerror = function (e) {
-            console.error("Error On Candidate: ", e);
+        this.onicecandidateerror =  (e) => {
+            console.error("Error On Candidate: ", this.memberCode, e);
         }
         this.onconnectionstatechange = function (event) {
             console.debug("Connection State: ", this.connectionState);

@@ -85,11 +85,12 @@ export default class MemberVideoStream extends Component<Props, State> {
             this.videoRef.current.style.visibility = 'hidden';
         }
     }
+
     createOffer = (stream: MediaStream) => {
         const peerConnection = this.getConnection(true);
         this.addStream(stream);
         peerConnection.performCreateOffer(this.trackAdded);
-    }
+    } 
 
     errorSessionDescription = (error, type: string) => {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
@@ -152,7 +153,7 @@ export default class MemberVideoStream extends Component<Props, State> {
                             <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-phone" onClick={this.redial} >Dial</AnchorWithIcon>
                         </Fragment>
                     }</div>
-
+                <p>{this.peerConnection?.senderInfo()}</p>
                 {/* <div>
                     <p>local desc: {JSON.stringify(this.getPeerConnection().localDescription)}</p>
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>

@@ -3,6 +3,9 @@ import BaseModel from './BaseModel';
 import { uniqueId } from './../utils/StringUtil';
 
 export default class ConferenceRoomModel extends BaseModel{
+    static clone(room: ConferenceRoomModel) : ConferenceRoomModel{
+        return Object.assign(new ConferenceRoomModel, room);
+    }
     
 	code:string = uniqueId();
 	active:boolean = false;
