@@ -14,7 +14,7 @@ import Spinner from '../../../loader/Spinner';
 import SimpleWarning from '../../../alert/SimpleWarning';
 import Card from '../../../container/Card';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
-import { removeOnConnecCallback as removeWSOnConnecCallback, removeWebsocketCallback } from '../../../../utils/websockets';
+import { removeOnConnecCallbacks } from '../../../../utils/websockets';
 import UserModel from './../../../../models/UserModel';
 import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
@@ -110,31 +110,30 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     componentWillUnmount() {
         console.debug("WILL UNMOUNT");
         this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
-        removeWSOnConnecCallback('USER_JOIN');
-        removeWSOnConnecCallback('INIT_MEDIA_STREAM');
+        removeOnConnecCallbacks('USER_JOIN', 'INIT_MEDIA_STREAM');
         this.cleanResources();
     }
     cleanResources = () => {
         if (!this.videoStream) return;
         console.debug("this.videoStream.getTracks(): ", this.videoStream.getTracks());
         for (let i = 0; i < this.videoStream.getTracks().length; i++) {
-            this.videoStream.getTracks()[i].stop(); 
+            this.videoStream.getTracks()[i].stop();
             console.debug("Clean track : ", this.videoStream.getTracks()[i].kind);
         }
     }
     recordLoaded = (response: WebResponse) => {
         this.setState({ room: Object.assign(new ConferenceRoomModel, response.conferenceRoom) }, this.initialize);
     }
-    initialize  = () => {
+    initialize = () => {
         //subscription
         this.addOnWsConnectCallbacks({
             id: 'USER_JOIN',
             callback: this.notifyUserEnterRoom
         },
-        {
-            id: "INIT_MEDIA_STREAM", 
-            callback: this.initMediaStream
-        });
+            {
+                id: "INIT_MEDIA_STREAM",
+                callback: this.initMediaStream
+            });
         //on connect
         this.addWebsocketSubscriptionCallback({
             id: 'CONFERENCE_STREAMING',
@@ -390,10 +389,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                     <Spinner /> :
                     this.state.room ?
                         <Fragment>
-                            <video muted ref={this.videoRef} height="200" width={200} controls />
-                            <RoomInfo redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
+                            <RoomInfo videoRef={this.videoRef} redialAll={this.dialAllMember} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
-
+                            <p/>
                             {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
                             <Card>
                                 <div className="row">
@@ -417,18 +415,25 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
+const RoomInfo = (props: { videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
     const room: ConferenceRoomModel = Object.assign(new ConferenceRoomModel, props.room);
     return (
-        <Card>
-            <FormGroup label="Code">{room.code}</FormGroup>
-            <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
-            <FormGroup>
-                <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
-                    {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
-                <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
-                    Redial</AnchorWithIcon>
-            </FormGroup>
+        <Card >
+            <div className="row">
+                <div className="col-md-4">
+                    <video muted ref={props.videoRef} height={200} width={200} controls />
+                </div>
+                <div className="col-md-8">
+                    <FormGroup label="Code">{room.code}</FormGroup>
+                    <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
+                    <FormGroup>
+                        <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
+                            {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
+                        <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
+                            Redial</AnchorWithIcon>
+                    </FormGroup>
+                </div>
+            </div>
         </Card>
     )
 }

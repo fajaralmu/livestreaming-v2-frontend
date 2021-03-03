@@ -21,7 +21,11 @@ export const sendToWebsocket = (url, requestObject) => {
 	stompClient.send(url, {}, JSON.stringify(requestObject));
 	return true;
 }
-
+export const removeOnConnecCallbacks = (...ids) => {
+	for (let i = 0; i < ids.length; i++) {
+		removeOnConnecCallback(ids[i]);
+	}
+}
 /**
  * 
  * @param {string} id 
