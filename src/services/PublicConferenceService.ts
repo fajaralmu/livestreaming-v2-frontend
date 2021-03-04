@@ -1,6 +1,8 @@
  
 import { contextPath } from '../constant/Url';
 import { commonAjaxPostCalls } from './Promises'; 
+import ChatMessageModel from './../models/ChatMessageModel';
+import WebRequest from './../models/WebRequest';
 export default class PublicConferenceService {
     nofityUserEnter( roomCode:string) {
         console.debug("nofityUserEnter: ", roomCode);
@@ -43,6 +45,16 @@ export default class PublicConferenceService {
     setActiveStatus = (active:boolean) => { 
         const endpoint = contextPath().concat("api/member/conference/updateactivestatus/"+(active==true?"true":"false"))
         return commonAjaxPostCalls(endpoint, {});
+    }
+    sendChatMessage = (body:string, roomCode:string) => { 
+        const endpoint = contextPath().concat("api/member/conference/sendchat/");
+        const message = new ChatMessageModel();
+        message.body = body;
+        message.roomCode = roomCode;
+        const request:WebRequest = {
+            chatMessage:message
+        }
+        return commonAjaxPostCalls(endpoint, request);
     }
     
 

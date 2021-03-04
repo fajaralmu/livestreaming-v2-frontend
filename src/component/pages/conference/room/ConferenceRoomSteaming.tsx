@@ -20,10 +20,12 @@ import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
 import SimpleError from '../../../alert/SimpleError';
+import ChatMessageModel from './../../../../models/ChatMessageModel';
+import ChatMessagePanel from './ChatMessagePanel';
 enum StreamType {
     CAMERA, SCREEN
 }
-const PEER_NEW = "PEER_NEW", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
+const PEER_NEW = "PEER_NEW", CHAT_MESSAGE = "CHAT_MESSAGE", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
     roomCode?: string;
     room?: ConferenceRoomModel;
@@ -206,9 +208,18 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 this.showInfo("Room Has been invalidated");
                 this.backToRoomMain();
                 break;
+            case CHAT_MESSAGE:
+                if (response.entity)
+                    this.addChatMessage(response.entity);
+                break;
             default:
                 break;
         }
+    }
+    addChatMessage = (message: ChatMessageModel) => {
+        const room = this.state.room;
+        if (!room) return;
+        this.setState({ room: room.addMessage(message) });
     }
     dialPeer = (response: WebResponse) => {
         const room = this.state.room;
@@ -274,7 +285,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
     updateRoomState = (room: ConferenceRoomModel) => {
-        this.setState({ room: ConferenceRoomModel.clone(room) });
+        this.setState({ room: room.clone() });
     }
     backToRoomMain = () => {
         this.props.history.push("/conference/room");
@@ -314,7 +325,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
 
-    initMediaStream = (redial:boolean = false) => {
+    initMediaStream = (redial: boolean = false) => {
         const config = { video: true, audio: true };
         let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
@@ -322,8 +333,8 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 this.setState({ errorMessage: undefined },
                     () => {
                         this.handleStream(stream, true);
-                        if (redial == true){
-                            this.notifyUserEnterRoom();   
+                        if (redial == true) {
+                            this.notifyUserEnterRoom();
                         }
                     });
             })
@@ -335,11 +346,11 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
     }
 
-    handleStream = (stream: MediaStream, updateVideoSrc : boolean = false) => {
+    handleStream = (stream: MediaStream, updateVideoSrc: boolean = false) => {
 
         console.debug("START HANDLE STREAM, update videoSRC: ", updateVideoSrc);
         if (updateVideoSrc) {
-            if(this.videoRef.current) {
+            if (this.videoRef.current) {
                 this.videoRef.current.srcObject = stream;
             } else {
                 doItLater(() => {
@@ -391,48 +402,62 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     retryMediaStream = () => {
         this.initMediaStream(true);
     }
+    sendMessage = (body:string) => {
+        this.commonAjax(
+            this.publicConferenceService.sendChatMessage,
+            (e)=>{},
+            this.showCommonErrorAlert,
+            body, this.state.roomCode
+        )
+    }
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
         return (
-            <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
-                <h2>STREAMING Room</h2>
-                <div className="alert alert-info"  >
-                    Welcome, <strong>{user.displayName}  </strong>
-                </div>
-                {this.state.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
+            <>
+                {this.state.room ? <ChatMessagePanel sendMessage={this.sendMessage} room={this.state.room} /> : null}
+                <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
 
-                    : null}
-                {this.state.room ?
-                    <Fragment>
-                        <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
-                            leaveRoom={this.leaveRoom} room={this.state.room} />
-                        <p />
-                        {this.state.errorMessage ?
-                            <div>
-                                <SimpleError>Error: {this.state.errorMessage}</SimpleError>
-                                <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryMediaStream}>Retry Media</AnchorWithIcon>
-                            </div>
-                            : null}
-                        {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
-                        <Card>
-                            <div className="row">
-                                {this.state.room.members.map((member: User, i) => {
-                                    member = UserModel.clone(member);
-                                    if (!this.memberRefs.get(member.getCode())) {
-                                        this.memberRefs.set(member.getCode(), React.createRef());
-                                    }
-                                    return (
-                                        <MemberVideoStream redial={this.dialPeerByCode} ref={this.memberRefs.get(member.getCode())} user={user} member={member}
-                                            room={this.state.room ?? new ConferenceRoomModel()} key={"vid-stream-" + member.code} />
-                                    )
-                                })}
-                            </div>
-                        </Card>
-                    </Fragment>
-                    : <SimpleWarning children="No Data" />
-                }
-            </div>
+                    <h2>STREAMING Room</h2>
+                    <div className="alert alert-info"  >
+                        Welcome, <strong>{user.displayName}  </strong>
+                    </div>
+                    {this.state.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
+
+                        : null}
+                    {this.state.room ?
+                        <Fragment>
+
+                            <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
+                                leaveRoom={this.leaveRoom} room={this.state.room} />
+                            <p />
+                            {this.state.errorMessage ?
+                                <div>
+                                    <SimpleError>Error: {this.state.errorMessage}</SimpleError>
+                                    <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryMediaStream}>Retry Media</AnchorWithIcon>
+                                </div>
+                                : null}
+                            {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
+                            <Card>
+                                <div className="row">
+                                    {this.state.room.members.map((member: User, i) => {
+                                        member = UserModel.clone(member);
+                                        if (!this.memberRefs.get(member.getCode())) {
+                                            this.memberRefs.set(member.getCode(), React.createRef());
+                                        }
+                                        return (
+                                            <MemberVideoStream redial={this.dialPeerByCode} ref={this.memberRefs.get(member.getCode())} user={user} member={member}
+                                                room={this.state.room ?? new ConferenceRoomModel()} key={"vid-stream-" + member.code} />
+                                        )
+                                    })}
+                                </div>
+                            </Card>
+
+                        </Fragment>
+                        : <SimpleWarning children="No Data" />
+                    }
+                </div>
+            </>
         )
     }
 }

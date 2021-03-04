@@ -1,0 +1,16 @@
+.chat-panel{
+    padding-top: 5px;
+    position: fixed;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    min-width: 300px;
+}
+
+.chat-list-wrapper {
+   
+    margin: auto;
+    width: 300px;
+    height: 400px;
+    overflow: scroll;
+}

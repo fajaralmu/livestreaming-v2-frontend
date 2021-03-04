@@ -10,6 +10,7 @@ import Spinner from '../../loader/Spinner';
 import UserService from './../../../services/UserService';
 import UserModel from './../../../models/UserModel';
 import WebResponse from './../../../models/WebResponse';
+import AppIcon from './AppIcon';
 class IState {
     loading: boolean = false; displayName: string = "";
     username: string = "";
@@ -80,16 +81,7 @@ class Register extends BaseComponent {
         return (
             <div id="RegisterForm" className="Register-wrapper" style={{ margin: 0, padding: 0 }}>
                 <div className="text-center" style={{ marginTop: '25px' }}>
-                    <svg className="x-app-icon " width="200" height="200">
-                        <circle className="path-circle" fill="white" cx="100" cy="100" r="95" strokeWidth={3} stroke="rgb(9,26,78)" />
-                        <path className="path" d="M 55 145 L 70 145 C 90 120, 110 115 140 102
-                            M 140 102 L 145 83 Q 125 85, 100 100 
-                            Q 80 98, 70 90 Q 68 85 72 80 Q 100 70, 125 73
-                            Q 86 35, 57 80 Q 48 110, 77 118
-                            Q 63 130 ,55 145
-                            " strokeWidth={3} stroke="rgb(9,26,78)" fill="transparent" />
-
-                    </svg>
+                    <AppIcon/>
                 </div>
                 <form name='Register' onSubmit={(e) => { this.register(e) }}
                     method='POST' className="form-signin text-center">

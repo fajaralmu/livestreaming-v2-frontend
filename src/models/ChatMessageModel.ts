@@ -7,5 +7,6 @@ export default class ChatMessageModel extends BaseModel{
 	body?:string;
 	date?:Date;
 	user?:UserModel;
+	roomCode?:string;
 
 }
