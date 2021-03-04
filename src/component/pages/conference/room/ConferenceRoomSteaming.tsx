@@ -29,23 +29,23 @@ class State {
     room?: ConferenceRoomModel;
     loading: boolean = false;
     streamType: StreamType = StreamType.CAMERA;
-    errorMessage?:string;
+    errorMessage?: string;
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
     publicConferenceService: PublicConferenceService;
     memberRefs: Map<string, React.RefObject<MemberVideoStream>> = new Map();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
-    handshakeHandler:  Record<string,(origin: string, data: WebRtcObject)=>void>;
+    handshakeHandler: Record<string, (origin: string, data: WebRtcObject) => void>;
     videoStream?: MediaStream;
-    videoStreamError:boolean = false;
+    videoStreamError: boolean = false;
     peerToDials: string[] = new Array();
     offersToHandle: Map<string, WebRtcObject> = new Map();
-    
+
     constructor(props: any) {
         super(props, "Conference", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
-        this.handshakeHandler  = {
+        this.handshakeHandler = {
             "offer": (origin: string, data: WebRtcObject) => {
                 this.handleOffer(origin, data);
             },
@@ -84,18 +84,18 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         })
     }
     handleDial = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE ",data.event," FROM : ", origin);
+        console.debug("HANDLE ", data.event, " FROM : ", origin);
         this.getMemberRef(origin).then(ref => {
             if (this.videoStream) {
                 ref.createOffer(this.videoStream);
             } else {
                 this.offersToHandle.set(origin, data.data);
             }
-           
+
         });
     }
     handleOffer = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE ",data.event," FROM : ", origin);
+        console.debug("HANDLE ", data.event, " FROM : ", origin);
         this.getMemberRef(origin).then(ref => {
             ref.handleOffer(origin, data.data, this.videoStream);
             if (!this.videoStream) {
@@ -104,13 +104,13 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }).catch(console.error);
     }
     handleAnswer = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE ",data.event," FROM : ", origin);
+        console.debug("HANDLE ", data.event, " FROM : ", origin);
         this.getMemberRef(origin).then(ref => {
             ref.handleAnswer(origin, data.data);
         }).catch(console.error);
     }
     handleCandidate = (origin: string, data: WebRtcObject) => {
-        console.debug("HANDLE ",data.event," FROM : ", origin);
+        console.debug("HANDLE ", data.event, " FROM : ", origin);
         this.getMemberRef(origin).then(ref => {
             ref.handleCandidate(origin, data.data);
         }).catch(console.error);
@@ -124,15 +124,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     cleanResources = () => {
         if (!this.videoStream) return;
         console.debug("this.videoStream.getTracks(): ", this.videoStream.getTracks());
-        this.videoStream.getTracks().forEach(stream=>{
+        this.videoStream.getTracks().forEach(stream => {
             stream.stop();
             console.debug("Clean track : ", stream.kind);
         })
     }
     recordLoaded = (response: WebResponse) => {
         if (response.conferenceRoom) {
-            this.setState({ room:ConferenceRoomModel.clone(response.conferenceRoom) }, this.initialize);
-        } else {console.error("ROOM NOT FOUND")}
+            this.setState({ room: ConferenceRoomModel.clone(response.conferenceRoom) }, this.initialize);
+        } else { console.error("ROOM NOT FOUND") }
     }
     initialize = () => {
         //subscription
@@ -140,10 +140,10 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             id: 'USER_JOIN',
             callback: this.notifyUserEnterRoom
         },
-        {
-            id: "INIT_MEDIA_STREAM",
-            callback: this.initMediaStream
-        });
+            {
+                id: "INIT_MEDIA_STREAM",
+                callback: this.initMediaStream
+            });
         //on connect
         this.addWebsocketSubscriptionCallback({
             id: 'CONFERENCE_STREAMING',
@@ -233,7 +233,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         room.addMember(peer);
         this.setState({ room: room }, () => {
             if (!this.videoStream && this.videoStreamError == false) {
-                console.info("PUSH ", peer.code," TO WAITING");
+                console.info("PUSH ", peer.code, " TO WAITING");
                 this.peerToDials.push(peer.code);
             } else {
                 this.dialPeerByCode(peer.code);
@@ -254,13 +254,13 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
         if (!this.videoStream) {
             //videoStreamError == true
-            ref.current.notifyCallTo( ); 
+            ref.current.notifyCallTo();
             return;
         }
         console.debug("Will Create OFFER to: ", code);
         ref.current.createOffer(this.videoStream);
     }
-    
+
     addNewRoomMember = (response: WebResponse) => {
         const room = this.state.room;
         if (room && response.user) {
@@ -274,7 +274,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
     updateRoomState = (room: ConferenceRoomModel) => {
-        this.setState({ room:ConferenceRoomModel.clone(room) });
+        this.setState({ room: ConferenceRoomModel.clone(room) });
     }
     backToRoomMain = () => {
         this.props.history.push("/conference/room");
@@ -314,16 +314,24 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
     }
 
-    initMediaStream = () => {
+    initMediaStream = (redial:boolean = false) => {
         const config = { video: true, audio: true };
         let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
-            .then((stream: MediaStream) => { this.handleStream(stream) })
-            .catch((e:any)=>{
+            .then((stream: MediaStream) => {
+                this.setState({ errorMessage: undefined },
+                    () => {
+                        this.handleStream(stream);
+                        if (redial == true){
+                            this.notifyUserEnterRoom();   
+                        }
+                    });
+            })
+            .catch((e: any) => {
                 console.error("ERROR INIT MEDIA STREAM: ", e);
                 this.videoStreamError = true;
-                this.setState({errorMessage: new String(e).toString()})
-            }); 
+                this.setState({ errorMessage: new String(e).toString() })
+            });
 
     }
 
@@ -349,14 +357,16 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         console.debug("END getUserMedia");
     }
     checkOffersWaiting = () => {
+        console.debug("this.offersToHandle: ", this.offersToHandle.size);
         this.offersToHandle.forEach((data, origin) => {
             this.handleOffer(origin, data);
         })
         this.offersToHandle.clear();
     }
     checkDialWaiting = () => {
+        console.debug("this.peerToDials: ", this.peerToDials.length);
         if (this.peerToDials.length == 0) return;
-        this.peerToDials.forEach(memberCode=>{
+        this.peerToDials.forEach(memberCode => {
             this.dialPeerByCode(memberCode);
         })
         this.peerToDials = [];
@@ -378,6 +388,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             this.state.roomCode
         )
     }
+    retryMediaStream = () => {
+        this.initMediaStream(true);
+    }
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
@@ -385,36 +398,39 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
                 <h2>STREAMING Room</h2>
                 <div className="alert alert-info"  >
-                    Welcome, <strong>{user.displayName}  </strong> 
+                    Welcome, <strong>{user.displayName}  </strong>
                 </div>
-                {this.state.loading ? <Spinner style={{zIndex:1000,position:'absolute', width:'100%', marginTop: 20}}  />
-                
-                : null}
-                   {this.state.room ?
-                        <Fragment>
-                            <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
-                                leaveRoom={this.leaveRoom} room={this.state.room} />
-                            <p/>
-                            {this.state.errorMessage? 
-                            <SimpleError>Error: {this.state.errorMessage}</SimpleError>
-                            :null}
-                            {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
-                            <Card>
-                                <div className="row">
-                                    {this.state.room.members.map((member: User, i) => {
-                                        member = UserModel.clone(member);
-                                        if (!this.memberRefs.get(member.getCode())) {
-                                            this.memberRefs.set(member.getCode(), React.createRef());
-                                        }
-                                        return (
-                                            <MemberVideoStream redial={this.dialPeerByCode} ref={this.memberRefs.get(member.getCode())} user={user} member={member}
-                                                room={this.state.room ?? new ConferenceRoomModel()} key={"vid-stream-" + member.code} />
-                                        )
-                                    })}
-                                </div>
-                            </Card>
-                        </Fragment>
-                        : <SimpleWarning children="No Data" />
+                {this.state.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
+
+                    : null}
+                {this.state.room ?
+                    <Fragment>
+                        <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
+                            leaveRoom={this.leaveRoom} room={this.state.room} />
+                        <p />
+                        {this.state.errorMessage ?
+                            <div>
+                                <SimpleError>Error: {this.state.errorMessage}</SimpleError>
+                                <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryMediaStream}>Retry Media</AnchorWithIcon>
+                            </div>
+                            : null}
+                        {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
+                        <Card>
+                            <div className="row">
+                                {this.state.room.members.map((member: User, i) => {
+                                    member = UserModel.clone(member);
+                                    if (!this.memberRefs.get(member.getCode())) {
+                                        this.memberRefs.set(member.getCode(), React.createRef());
+                                    }
+                                    return (
+                                        <MemberVideoStream redial={this.dialPeerByCode} ref={this.memberRefs.get(member.getCode())} user={user} member={member}
+                                            room={this.state.room ?? new ConferenceRoomModel()} key={"vid-stream-" + member.code} />
+                                    )
+                                })}
+                            </div>
+                        </Card>
+                    </Fragment>
+                    : <SimpleWarning children="No Data" />
                 }
             </div>
         )
