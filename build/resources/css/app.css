@@ -3,7 +3,7 @@
   min-height: 90vh;
   margin-top: 10px;
   margin-bottom: 10px;
-  background-image: url("../assets/footer.png");
+  /* background-image: url("../assets/footer.png"); */
   background-position: bottom;
   background-size: contain;
   background-repeat: no-repeat;
@@ -16,7 +16,7 @@
   padding-bottom: 500px;
   min-height: 95vh;
   margin: 0;
-  background-image: url("../assets/footer.png");
+  /* background-image: url("../assets/footer.png"); */
   background-position: bottom;
   background-size: contain;
   background-repeat: no-repeat;
@@ -33,7 +33,7 @@
   #sidebar {
     overflow: scroll;
     padding-bottom: 200px;
-    background-image: url("../assets/sidebar-bg.png");
+    /* background-image: url("../assets/sidebar-bg.png"); */
     background-position: bottom;
     background-size: contain;
     background-repeat: no-repeat;
@@ -43,23 +43,13 @@
   padding: 0;
   min-height: 90vh;
   margin: 0;
-  background-image: url("../assets/footer.png");
+  /* background-image: url("../assets/footer.png"); */
   background-position: bottom;
   background-size: contain;
   background-repeat: no-repeat;
 }
 .app-icon {
-  background-image: url('../assets/ABATASA_ICON.JPG');
+  /* background-image: url('../assets/ABATASA_ICON.JPG'); */
   background-size: cover;
   background-position: center;
-}
-.quiz-wrapper { 
-  min-height: 90vh;
-  margin: 0;
-  background-image: url("../assets/footer.png");
-  background-position: bottom;
-  background-size: contain;
-  background-repeat: no-repeat;
-  padding-bottom: 250px;
-  padding-top: 20px;
 }

@@ -19,7 +19,7 @@ export default class HandshakeLog extends Component<Props, State>{
     }
     addLog = (log: string) => {
         const logs = this.state.logs;
-        logs.push(log);
+        // logs.push(log);
         this.setState({ logs: logs });
     }
     getMappedLog = () => {

@@ -3,18 +3,12 @@
    margin: auto;
    margin-top: 5px;
  }
-.path {
+.icon-svg-long {
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
-  animation: dash 5s linear forwards;
+  animation: dash 2s linear forwards;
 }
-
-.path-circle {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: dash 3s linear forwards;
-}
-
+ 
 @keyframes dash {
   to {
     stroke-dashoffset: 0;

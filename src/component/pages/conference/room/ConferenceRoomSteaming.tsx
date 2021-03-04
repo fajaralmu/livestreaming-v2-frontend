@@ -321,7 +321,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             .then((stream: MediaStream) => {
                 this.setState({ errorMessage: undefined },
                     () => {
-                        this.handleStream(stream);
+                        this.handleStream(stream, true);
                         if (redial == true){
                             this.notifyUserEnterRoom();   
                         }
@@ -335,26 +335,28 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
     }
 
-    handleStream = (stream: MediaStream) => {
+    handleStream = (stream: MediaStream, updateVideoSrc : boolean = false) => {
 
-        console.debug("START getUserMedia");
-        if (this.videoRef.current) {
-            this.videoRef.current.srcObject = stream;
-        } else {
-            doItLater(() => {
-                if (this.videoRef.current) {
-                    this.videoRef.current.srcObject = stream;
-                } else {
-                    console.debug("this.videoRef.current not found");
-                }
-            }, 1000);
-            console.debug("this.videoRef.current not found, retrying in 1 sec");
+        console.debug("START HANDLE STREAM, update videoSRC: ", updateVideoSrc);
+        if (updateVideoSrc) {
+            if(this.videoRef.current) {
+                this.videoRef.current.srcObject = stream;
+            } else {
+                doItLater(() => {
+                    if (this.videoRef.current) {
+                        this.videoRef.current.srcObject = stream;
+                    } else {
+                        console.debug("this.videoRef.current not found");
+                    }
+                }, 1000);
+                console.debug("this.videoRef.current not found, retrying in 1 sec");
+            }
         }
         this.videoStream = stream;
         this.videoStreamError = false;
         this.checkDialWaiting();
         this.checkOffersWaiting();
-        console.debug("END getUserMedia");
+        console.debug("END HANDKE STREAM");
     }
     checkOffersWaiting = () => {
         console.debug("this.offersToHandle: ", this.offersToHandle.size);
@@ -366,9 +368,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     checkDialWaiting = () => {
         console.debug("this.peerToDials: ", this.peerToDials.length);
         if (this.peerToDials.length == 0) return;
-        this.peerToDials.forEach(memberCode => {
-            this.dialPeerByCode(memberCode);
-        })
+        this.peerToDials.forEach(this.dialPeerByCode);
         this.peerToDials = [];
     }
     leaveRoom = () => {

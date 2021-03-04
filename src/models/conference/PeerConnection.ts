@@ -1,13 +1,21 @@
 
 import MemberVideoStream from '../../component/pages/conference/room/MemberVideoStream';
+/**
+ * app.streaming.ice.iceStunServer=stun:206.253.167.195:3470
+#app.streaming.ice.iceStunServer=stun:stun2.1.google.com:19302
+app.streaming.ice.iceTurnServer=turn:206.253.167.195:3478
+#app.streaming.ice.iceTurnServer=206.253.167.195:2222
+app.streaming.ice.iceTurnServer.username=username1
+app.streaming.ice.iceTurnServer.password=password1
+ */
 const config: RTCConfiguration = {
         "iceServers": [
             { "urls": "stun:stun2.1.google.com:19302" }
-            // ,{
-            //       "urls":"${iceTurnServer.url}",
-            //       "username": "${iceTurnServer.username}",
-            //       "credential":"${iceTurnServer.password}"
-            //     }
+            ,{
+                  "urls":"turn:206.253.167.195:3478",
+                  "username": "username1",
+                  "credential":"password1"
+                }
         ]
     };
 export default class PeerConnection extends RTCPeerConnection {
