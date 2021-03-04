@@ -1,5 +1,5 @@
 .chat-panel{
-    padding-top: 5px;
+    padding: 5px;
     position: fixed;
     z-index: 1;
     right: 0;
@@ -13,4 +13,9 @@
     width: 300px;
     height: 400px;
     overflow: scroll;
+}
+
+.chat-item {
+    padding-left: 5px;
+    padding-right: 5px;
 }

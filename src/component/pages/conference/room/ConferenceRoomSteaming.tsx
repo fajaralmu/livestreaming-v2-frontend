@@ -402,20 +402,13 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     retryMediaStream = () => {
         this.initMediaStream(true);
     }
-    sendMessage = (body:string) => {
-        this.commonAjax(
-            this.publicConferenceService.sendChatMessage,
-            (e)=>{},
-            this.showCommonErrorAlert,
-            body, this.state.roomCode
-        )
-    }
+    
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
         return (
             <>
-                {this.state.room ? <ChatMessagePanel sendMessage={this.sendMessage} room={this.state.room} /> : null}
+                {this.state.room ? <ChatMessagePanel  room={this.state.room} /> : null}
                 <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
 
                     <h2>STREAMING Room</h2>
