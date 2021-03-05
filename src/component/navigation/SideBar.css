@@ -4,7 +4,7 @@
   height: 100vh;
   width: 250px;
   padding-top: 75px;
-  z-index: 50;
+ 
   border-right: solid 1px #aaaaaa;
 }
 .sidebar-nav {
@@ -94,6 +94,7 @@
   #sidebar { 
     display: block;
     background-color: #343a40; 
+    z-index: 50;
   } 
   .sidebar-item-brand {
     display: none;
