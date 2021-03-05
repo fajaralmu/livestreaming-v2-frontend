@@ -14,14 +14,14 @@ import Filter from './../../../models/Filter';
 import WebRequest from './../../../models/WebRequest';
 import AnchorButton from './../../navigation/AnchorButton';
 class State {
-    entityProperty?:EntityProperty;
+    entityProperty?: EntityProperty;
 }
 class MasterDataManagement extends BaseComponent {
     masterDataService: MasterDataService;
     code: string = "";
     loadingEntityProperty: boolean = false;
     entityProperty: undefined
-    state:State = new State();
+    state: State = new State();
     constructor(props: any) {
         super(props, true);
         this.masterDataService = this.getServices().masterDataService;
@@ -51,12 +51,12 @@ class MasterDataManagement extends BaseComponent {
             this.loadEntityProperty();
         }
     }
-    startLoading(raltime:boolean) {
-        if (raltime==true) {
+    startLoading(raltime: boolean) {
+        if (raltime == true) {
             super.startLoading(raltime);
         }
     }
-     
+
     loadEntityProperty() {
 
         if (undefined == this.code && this.loadingEntityProperty == true) {
@@ -86,7 +86,7 @@ class MasterDataManagement extends BaseComponent {
         this.showConfirmation("Print record? ")
             .then(ok => {
                 if (!ok) return;
-                const req:WebRequest = {
+                const req: WebRequest = {
                     entity: property.entityName,
                     filter: filter
                 }
@@ -94,7 +94,7 @@ class MasterDataManagement extends BaseComponent {
                     this.masterDataService.generateReport,
                     this.reportCreated,
                     this.showCommonErrorAlert,
-                    req); 
+                    req);
             })
     }
     reportCreated = (attachment: AttachmentInfo) => {
@@ -113,13 +113,12 @@ class MasterDataManagement extends BaseComponent {
     render() {
         if (this.state.entityProperty == undefined) {
             return (
-                <div className="row container-fluid section-body" style={{ paddingTop: '20px' }}>
-
-                    <div className="col-4 text-right"><div className="spinner-border" role="status">
-
+                <div className=" container-fluid section-body" style={{ paddingTop: '20px' }}>
+                    <div className="row">
+                        <div className="col-4 text-right"><div className="spinner-border" role="status" />
+                        </div>
+                        <div className="col-8"><h4>Loading configuration</h4></div>
                     </div>
-                    </div>
-                    <div className="col-8"><h4>Loading configuration</h4></div>
                 </div>
             )
         }
@@ -127,7 +126,7 @@ class MasterDataManagement extends BaseComponent {
         return (
             <div id="MasterDataManagement" className="container-fluid section-body">
                 <h2>{this.state.entityProperty.alias}</h2>
-                
+
                 <MasterDataList printRecord={this.printRecord} entityProperty={this.state.entityProperty} />
             </div>
         )

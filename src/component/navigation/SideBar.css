@@ -82,6 +82,7 @@
   #sidebar {
     width: min-content;
     margin-top: 55px;
+    /* z-index: 1; */
   }
   .sidebar-item-brand a,
   .sidebar-item a {

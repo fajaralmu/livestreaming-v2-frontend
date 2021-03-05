@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
 import { withRouter } from 'react-router-dom';
@@ -79,12 +79,12 @@ class MainLayout extends BaseComponent {
     render() {
         const showSidebar = this.state.showSidebar == true;
         return (
-            <div id="main-layout">
+            <Fragment>
                 <Header setMenuNull={this.setMenuNull} activeMenuCode={this.state.activeMenuCode} setMenu={this.setMenu}  />
-                <div id="page-content" className="container-fluid" style={{ margin: 0, padding: 0, minHeight: '95vh' }}>
+                
                     {/* <div className="?"> */}
                     
-                    <div className="container-fluid" style={{zIndex: 1 , position:'absolute', paddingTop: '55px'}} id={showSidebar ? "app-content" : "content"}>
+                    <div id={showSidebar ? "app-content" : "content"} className="container-fluid" style={{ position:'absolute', paddingTop: '55px'}}>
                         <ApplicationContent setSidebarMenus={this.setSidebarMenus}  />
                     </div>
                     {showSidebar == true ?  
@@ -92,8 +92,8 @@ class MainLayout extends BaseComponent {
                          : null}
                     {/* </div> */}
 
-                </div>
-            </div>
+                
+            </Fragment>
         )
     }
 
