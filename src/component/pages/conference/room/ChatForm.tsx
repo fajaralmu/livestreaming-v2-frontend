@@ -35,7 +35,7 @@ class ChatForm extends BaseComponent {
             <form style={{ padding: 5 }} onSubmit={e => { e.preventDefault(); this.sendMessage() }}>
 
                 <div className="input-group">
-                    <input value={this.state.chatBody} className="form-control" name="chatBody" onChange={this.updateChatBody} />
+                    <input required value={this.state.chatBody} className="form-control" name="chatBody" onChange={this.updateChatBody} />
                     <div className="input-group-append">
                         <SubmitButton loading={this.state.loading} />
                     </div>
@@ -48,14 +48,14 @@ class ChatForm extends BaseComponent {
 const SubmitButton = (props: { loading: boolean }) => {
 
     if (props.loading) {
-        return <button className="btn btn-dark btn-sm" type="button" disabled>
+        return <button className="btn btn-light btn-sm" type="button" disabled>
             <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span className="sr-only">Loading...</span>
         </button>
 
     }
     return (
-        <button type="submit" className="btn btn-dark btn-sm" >
+        <button type="submit" className="btn btn-light btn-sm" >
             <i className="fas fa-paper-plane" />
         </button>
     )

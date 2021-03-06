@@ -15,8 +15,10 @@ interface Props {
 class State {
     videoVisible: boolean = false;
     showLog:boolean= false;
+   
 }
 export default class MemberVideoStream extends Component<Props, State> {
+   
     trackAdded: boolean = false; 
     peerConnection?: PeerConnection;
     logRef: React.RefObject<HandshakeLog> = React.createRef();
@@ -33,6 +35,11 @@ export default class MemberVideoStream extends Component<Props, State> {
             if (track.id == id) { return true; }
         }
         return false;
+    }
+    setLogEnabled = (val: boolean) => {
+        if (this.logRef.current) {
+            this.logRef.current.setLogEnabled(val);
+        }
     }
 
     private addStream = (stream: MediaStream) => {

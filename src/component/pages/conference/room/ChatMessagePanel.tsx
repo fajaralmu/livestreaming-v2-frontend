@@ -51,14 +51,14 @@ export default class ChatMessagePanel extends Component<Props, State> {
         const showChat = this.state.showChat;
         return (
             <div style={{ position: 'absolute' }}>
-                <div className="chat-panel bg-light border  rounded">
+                <div className="chat-panel bg-success border border-success rounded">
                     {showChat ?
                         <><ChatList chats={this.getMessages()} />
                             <ChatForm roomCode={this.props.room.code} />
                         </> : null
                     }
                     <div onClick={this.toggleChat} className="text-center">
-                        <AnchorWithIcon className="btn btn-light" iconClassName={showChat ? "fas fa-angle-down" : "fas fa-angle-up"} onClick={this.toggleChat} >
+                        <AnchorWithIcon className="btn btn-success" iconClassName={showChat ? "fas fa-angle-down" : "fas fa-angle-up"} onClick={this.toggleChat} >
                             Chat{this.state.unreadCount > 0 ? " (" + this.state.unreadCount + ")" : null}
                         </AnchorWithIcon>
                     </div>
@@ -86,7 +86,7 @@ class ChatList extends Component<{ chats: ChatMessageModel[] }, any>{
     render() {
         const props = this.props;
         return (
-            <div className="chat-list-wrapper bg-white border ">
+            <div className="chat-list-wrapper bg-white border  border-success">
                 <div style={{ padding: 2 }}>
                     {props.chats.map((chat, i) => {
                         return <Fragment key={"chat-" + i}>

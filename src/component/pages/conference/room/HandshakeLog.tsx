@@ -10,17 +10,25 @@ interface Props {
 export default class HandshakeLog extends Component<Props, State>{
     state: State = new State();
     id: string = uniqueId();
+    enabled:boolean = false;
     constructor(props) {
         super(props);
     }
     clearLog = () => {
-
         this.setState({ logs: [] })
+    }
+    setLogEnabled = (val:boolean) => {
+        this.enabled = val;
+        if (!val) {
+            this.clearLog();
+        }
     }
     addLog = (log: string) => {
         const logs = this.state.logs;
-        // logs.push(log);
-        this.setState({ logs: logs });
+        if (this.enabled) {
+            logs.push(log);
+            this.setState({ logs: logs });
+        }
     }
     getMappedLog = () => {
         const logs: string[] = this.state.logs;

@@ -22,6 +22,7 @@ import { doItLater } from './../../../../utils/EventUtil';
 import SimpleError from '../../../alert/SimpleError';
 import ChatMessageModel from './../../../../models/ChatMessageModel';
 import ChatMessagePanel from './ChatMessagePanel';
+import ToggleButton from '../../../navigation/ToggleButton';
 enum StreamType {
     CAMERA, SCREEN
 }
@@ -32,6 +33,10 @@ class State {
     loading: boolean = false;
     streamType: StreamType = StreamType.CAMERA;
     errorMessage?: string;
+    logEnabled: boolean = false;
+}
+const videoConstraint: MediaTrackConstraints = {
+    width: { ideal: 30 }, height: { ideal: 30 }
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
@@ -43,6 +48,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     videoStreamError: boolean = false;
     peerToDials: string[] = new Array();
     offersToHandle: Map<string, WebRtcObject> = new Map();
+
 
     constructor(props: any) {
         super(props, "Conference", true);
@@ -61,6 +67,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 this.handleDial(origin, data);
             },
         };
+    }
+    setLogEnabled = (val: boolean) => {
+        this.setState({ logEnabled: val },
+            () =>
+                this.memberRefs.forEach(ref => {
+                    if (ref.current) {
+                        ref.current.setLogEnabled(val);
+                    }
+                }));
     }
     getMemberRef = (code: string): Promise<MemberVideoStream> => {
         // console.debug("this.memberRefs: ", this.memberRefs);
@@ -326,12 +341,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 
     initMediaStream = (redial: boolean = false) => {
-        const video:MediaTrackConstraints = {
-           width: {ideal:50},
-           height: {ideal:50}
-        }
-        const config:MediaStreamConstraints= { video: video, audio: true };
-        
+
+        const config: MediaStreamConstraints = { video: videoConstraint, audio: true };
+
         let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
             .then((stream: MediaStream) => {
@@ -407,13 +419,13 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     retryMediaStream = () => {
         this.initMediaStream(true);
     }
-    
+
     render() {
         const user: User | undefined = this.getLoggedUser();
         if (!user) return null;
         return (
             <>
-                {this.state.room ? <ChatMessagePanel  room={this.state.room} /> : null}
+                {this.state.room ? <ChatMessagePanel room={this.state.room} /> : null}
                 <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
 
                     <h2>STREAMING Room</h2>
@@ -426,7 +438,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                     {this.state.room ?
                         <Fragment>
 
-                            <RoomInfo videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
+                            <RoomInfo setLogEnabled={this.setLogEnabled} logEnabled={this.state.logEnabled} videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
                             <p />
                             {this.state.errorMessage ?
@@ -460,7 +472,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 }
 
-const RoomInfo = (props: { videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
+const RoomInfo = (props: { logEnabled: boolean, setLogEnabled(val: boolean): any, videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
     const room: ConferenceRoomModel = ConferenceRoomModel.clone(props.room);
     return (
         <Card >
@@ -471,10 +483,14 @@ const RoomInfo = (props: { videoRef: React.RefObject<HTMLVideoElement>, redialAl
                 <div className="col-md-8">
                     <FormGroup label="Code">{room.code}</FormGroup>
                     <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
+                    <FormGroup label="Enable Log">
+                        <ToggleButton active={props.logEnabled} onClick={props.setLogEnabled} />
+                    </FormGroup>
                     <FormGroup>
-                        <AnchorWithIcon iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
+                        <AnchorWithIcon className="btn btn-outline-danger" iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
                             {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
-                        <AnchorWithIcon iconClassName="fas fa-phone" onClick={props.redialAll}>
+                            &nbsp;
+                        <AnchorWithIcon className="btn btn-outline-success" iconClassName="fas fa-phone" onClick={props.redialAll}>
                             Redial</AnchorWithIcon>
                     </FormGroup>
                 </div>
