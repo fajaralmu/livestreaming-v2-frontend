@@ -326,7 +326,12 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 
     initMediaStream = (redial: boolean = false) => {
-        const config = { video: true, audio: true };
+        const video:MediaTrackConstraints = {
+           width: {ideal:50},
+           height: {ideal:50}
+        }
+        const config:MediaStreamConstraints= { video: video, audio: true };
+        
         let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
             .then((stream: MediaStream) => {
