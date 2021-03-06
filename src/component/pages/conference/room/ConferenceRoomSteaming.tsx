@@ -36,7 +36,7 @@ class State {
     logEnabled: boolean = false;
 }
 const videoConstraint: MediaTrackConstraints = {
-    width: { ideal: 30 }, height: { ideal: 30 }
+    width: { ideal: 40 }, height: { ideal: 40 }
 }
 class ConferenceRoomSteaming extends BaseMainMenus {
     state: State = new State();
