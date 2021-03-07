@@ -118,7 +118,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.getMemberRef(origin).then(ref => {
             ref.handleOffer(origin, data.data, this.videoStream);
             if (!this.videoStream) {
-                ref.addLog("No VideoStream at offer");
+                ref.addLog("No VideoStream at offer: "+origin);
                 this.offersToHandle.set(origin, data.data);
             }
         }).catch(console.error);
@@ -395,7 +395,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             alert("WILL ReHandle offfer: "+this.offersToHandle.size);
         }
         this.offersToHandle.forEach((data, origin) => {
-            this.handleOffer(origin, data);
+            this.dialPeerByCode(origin);
         })
         this.offersToHandle.clear();
     }
