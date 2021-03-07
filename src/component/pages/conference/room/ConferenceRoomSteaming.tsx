@@ -118,6 +118,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.getMemberRef(origin).then(ref => {
             ref.handleOffer(origin, data.data, this.videoStream);
             if (!this.videoStream) {
+                ref.addLog("No VideoStream at offer");
                 this.offersToHandle.set(origin, data.data);
             }
         }).catch(console.error);
@@ -390,6 +391,9 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
     checkOffersWaiting = () => {
         console.debug("this.offersToHandle: ", this.offersToHandle.size);
+        if (this.offersToHandle.size > 0) {
+            alert("WILL ReHandle offfer: "+this.offersToHandle.size);
+        }
         this.offersToHandle.forEach((data, origin) => {
             this.handleOffer(origin, data);
         })
