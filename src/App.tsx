@@ -16,7 +16,8 @@ import { performWebsocketConnection, setWebSocketUrl, registerWebSocketCallbacks
 import UserService from './services/UserService';
 import AnchorWithIcon from './component/navigation/AnchorWithIcon';
 import { time } from 'console';
-import { doItLater, updateFavicon } from './utils/EventUtil';
+import { doItLater, updateFavicon } from './utils/EventUtil'; 
+import SimpleError from './component/alert/SimpleError';
 
 class IState {
   loading: boolean = false;
@@ -25,7 +26,7 @@ class IState {
   mainAppUpdated: Date = new Date();
   showAlert: boolean = false;
   realtime: boolean = false;
-  appIdStatus: string = "Loading App Id";
+  loadingAppStatus: string = "loading application";
   errorAuthenticatingApp: boolean = false;
 }
 class App extends Component<any, IState> {
@@ -56,19 +57,24 @@ class App extends Component<any, IState> {
   refresh = () => { this.setState({ mainAppUpdated: new Date() }); }
 
   requestAppId = () => {
-    this.setState({ appIdStatus: "Authenticating application", errorAuthenticatingApp: false });
+    this.setState({ loadingAppStatus: "loading application", errorAuthenticatingApp: false });
     this.userService.requestApplicationId((response) => {
-      this.props.setRequestId(response, this);
-      this.refresh();
-      this.setState({ errorAuthenticatingApp: false });
+      doItLater(() => {
+        this.props.setRequestId(response, this);
+        this.refresh();
+        this.setState({ errorAuthenticatingApp: false });
+      },  500);
+
     }, this.retryRequestAppId)
 
   }
   retryRequestAppId = () => {
-    this.setState({ appIdStatus: "Authenticating application (Retrying)", errorAuthenticatingApp: false });
+    this.setState({ loadingAppStatus: "loading application (Retrying)", errorAuthenticatingApp: false });
     this.userService.requestApplicationIdNoAuth((response) => {
-      this.props.setRequestId(response, this);
-      this.setState({ errorAuthenticatingApp: false });
+      doItLater(() => {
+        this.props.setRequestId(response, this);
+        this.setState({ errorAuthenticatingApp: false });
+      }, 500);
     },
       () =>
         this.setState({ errorAuthenticatingApp: true }))
@@ -163,12 +169,12 @@ class App extends Component<any, IState> {
   initWebsocket = () => {
     setWebSocketUrl(url.contextPath() + 'realtime-app');
     registerWebSocketCallbacks({
-      id:"PROGRESS",
+      id: "PROGRESS",
       subscribeUrl: "/wsResp/progress/" + this.props.requestId,
       callback: this.handleProgress  //must use lambda
     },
       {
-        id:"GENERAL_UPDATE",
+        id: "GENERAL_UPDATE",
         subscribeUrl: "/wsResp/" + this.props.requestId + "/update",
         callback: (response) => this.handleWsUpdate(response)
       });
@@ -193,12 +199,7 @@ class App extends Component<any, IState> {
   render() {
     if (!this.props.requestId) {
       return (
-        <div className="text-center" style={{ paddingTop: '10%' }}>
-          <h2>{this.state.appIdStatus}</h2>
-          {this.state.errorAuthenticatingApp ?
-            <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryRequestAppId} children="Retry" /> :
-            <Spinner />}
-        </div>
+        <LoadingScreen error={this.state.errorAuthenticatingApp} message={this.state.loadingAppStatus} retry={this.retryRequestAppId} />
       )
     }
     return (
@@ -230,7 +231,20 @@ function Loading(props) {
   }
   return null;
 }
+const LoadingScreen = (props: { error: boolean, retry(): any, message: string }) => {
 
+  return (
+    <div className="text-center" >
+      <p/>
+      {props.error ?
+        <SimpleError>Loading Error</SimpleError> : <Spinner />}
+      <h4>{props.message}</h4>
+      {props.error ?
+        <AnchorWithIcon iconClassName="fas fa-redo" onClick={props.retry} children="Retry" /> :
+        null}
+    </div>
+  )
+}
 
 const mapDispatchToProps = (dispatch: Function) => ({
   setMainApp: (app: App) => dispatch(actions.setMainApp(app)),

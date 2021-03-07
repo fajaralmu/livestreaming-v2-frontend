@@ -12,7 +12,7 @@ export const MemberList = (props: { room:ConferenceRoomModel, user:UserModel,
     const user =props.user;
     const members: UserModel[] = props.room.members;
     return (
-        <Card>
+        <Card title={"Members ("+(members.length)+")"}>
             <div className="row">
                 {members.map((member: UserModel, i) => {
                     member = UserModel.clone(member);

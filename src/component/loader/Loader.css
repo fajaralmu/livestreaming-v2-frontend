@@ -1,30 +1,47 @@
-.message{
-    text-align: center;
-    font-family: 'Segoe UI';
-    z-index: 100;
+.message {
+  text-align: center;
+  font-family: "Segoe UI";
+  z-index: 100;
 }
-.message-failed{
-     color: white;
-     background-color: coral
+.message-failed {
+  color: white;
+  background-color: coral;
 }
-.message-success{
-    color: white;
-    background-color:lawngreen
+.message-success {
+  color: white;
+  background-color: lawngreen;
 }
-.message-warning{
-    color: white;
-    background-color:orange
+.message-warning {
+  color: white;
+  background-color: orange;
 }
 
-.message-loading{
-    padding: 3px;
-    width:100%;
-    font-family: 'Lucida Sans';
-    position: fixed;  
-    background-color: none;
+.message-loading {
+  padding: 3px;
+  width: 100%;
+  font-family: "Lucida Sans";
+  position: fixed;
+  background-color: none;
 }
- .loader{
-    font-size: '60';
-    font-family: 'Arial Black';
-    color:white
+.loader {
+  font-size: "60";
+  font-family: "Arial Black";
+  color: white;
+}
+
+.icon-svg-loader-slow {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: dash-loader 3s linear infinite;
+}
+.icon-svg-loader {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: dash-loader 2s linear infinite;
+}
+
+@keyframes dash-loader {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
