@@ -23,6 +23,7 @@ import SimpleError from '../../../alert/SimpleError';
 import ChatMessageModel from './../../../../models/ChatMessageModel';
 import ChatMessagePanel from './ChatMessagePanel';
 import ToggleButton from '../../../navigation/ToggleButton';
+import { RoomInfo } from './roomHelper';
 enum StreamType {
     CAMERA, SCREEN
 }
@@ -34,6 +35,7 @@ class State {
     streamType: StreamType = StreamType.CAMERA;
     errorMessage?: string;
     logEnabled: boolean = false;
+    mediaStreamReady: boolean = false;
 }
 const videoConstraint: MediaTrackConstraints = {
     width: { ideal: 40 }, height: { ideal: 40 }
@@ -347,7 +349,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
         mediaStream
             .then((stream: MediaStream) => {
-                this.setState({ errorMessage: undefined },
+                this.setState({ errorMessage: undefined, mediaStreamReady: true },
                     () => {
                         this.handleStream(stream, true);
                         if (redial == true) {
@@ -358,7 +360,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             .catch((e: any) => {
                 console.error("ERROR INIT MEDIA STREAM: ", e);
                 this.videoStreamError = true;
-                this.setState({ errorMessage: new String(e).toString() })
+                this.setState({ errorMessage: new String(e).toString(), mediaStreamReady: false })
             });
 
     }
@@ -432,20 +434,20 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                     <div className="alert alert-info"  >
                         Welcome, <strong>{user.displayName}  </strong>
                     </div>
-                    {this.state.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
-
-                        : null}
+                    <Loading show={this.state.loading} />
                     {this.state.room ?
                         <Fragment>
-
                             <RoomInfo setLogEnabled={this.setLogEnabled} logEnabled={this.state.logEnabled} videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={this.state.room} />
                             <p />
+                            {this.state.mediaStreamReady? 
+                                <div className="alert alert-primary">Media Stream Ready</div>:null
+                            }
                             {this.state.errorMessage ?
-                                <div>
+                                <Fragment>
                                     <SimpleError>Error: {this.state.errorMessage}</SimpleError>
                                     <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryMediaStream}>Retry Media</AnchorWithIcon>
-                                </div>
+                                </Fragment>
                                 : null}
                             {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
                             <Card>
@@ -471,33 +473,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         )
     }
 }
-
-const RoomInfo = (props: { logEnabled: boolean, setLogEnabled(val: boolean): any, videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
-    const room: ConferenceRoomModel = ConferenceRoomModel.clone(props.room);
+const Loading = (props) => {
     return (
-        <Card >
-            <div className="row">
-                <div className="col-md-4">
-                    <video muted ref={props.videoRef} height={200} width={200} controls />
-                </div>
-                <div className="col-md-8">
-                    <FormGroup label="Code">{room.code}</FormGroup>
-                    <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
-                    <FormGroup label="Enable Log">
-                        <ToggleButton active={props.logEnabled} onClick={props.setLogEnabled} />
-                    </FormGroup>
-                    <FormGroup>
-                        <AnchorWithIcon className="btn btn-outline-danger" iconClassName="fas fa-sign-out-alt" onClick={props.leaveRoom}>
-                            {props.room.isAdmin(props.user) ? "Invalidate" : "Leave"}</AnchorWithIcon>
-                            &nbsp;
-                        <AnchorWithIcon className="btn btn-outline-success" iconClassName="fas fa-phone" onClick={props.redialAll}>
-                            Redial</AnchorWithIcon>
-                    </FormGroup>
-                </div>
-            </div>
-        </Card>
+        props.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
+
+            : null
     )
 }
+
 
 export default withRouter(connect(
     mapCommonUserStateToProps
