@@ -102,7 +102,7 @@ export default class MemberVideoStream extends Component<Props, State> {
     errorSessionDescription = (error, type: string) => {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
-    notifyCallTo = () => {
+    requestDial = () => {
         this.addLog("REQUEST CALLING FROM :" +this.getMember().code);
         this.sendHandshake('dial', {});
     }
@@ -152,9 +152,9 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
         const room = this.getRoom();
         const member = this.getMember();
-        return <div className="col-md-4 text-center">
+        return <div className="col-md-3 text-center">
             <Card title={
-                <label>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check" /> : "")}</label>}>
+                <label style={{fontSize:'0.8em'}}>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check" /> : "")}</label>}>
                 <div>
                     {this.isCurrentUser() ?
                         <h2>You</h2> :

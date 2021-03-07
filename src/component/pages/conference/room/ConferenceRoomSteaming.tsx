@@ -1,32 +1,22 @@
-
-
-import React, { FormEvent, Fragment, RefObject } from 'react';
+import React, { FormEvent, Fragment } from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { mapCommonUserStateToProps } from '../../../../constant/stores';
-import BaseMainMenus from '../../../layout/BaseMainMenus';
 import User from '../../../../models/UserModel';
 import PublicConferenceService from '../../../../services/PublicConferenceService';
-import FormGroup from '../../../form/FormGroup';
 import ConferenceRoomModel from '../../../../models/ConferenceRoomModel';
 import WebResponse from '../../../../models/WebResponse';
 import Spinner from '../../../loader/Spinner';
 import SimpleWarning from '../../../alert/SimpleWarning';
-import Card from '../../../container/Card';
-import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import { removeOnConnecCallbacks } from '../../../../utils/websockets';
-import UserModel from './../../../../models/UserModel';
 import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
-import SimpleError from '../../../alert/SimpleError';
 import ChatMessageModel from './../../../../models/ChatMessageModel';
 import ChatMessagePanel from './ChatMessagePanel';
-import ToggleButton from '../../../navigation/ToggleButton';
-import { RoomInfo } from './roomHelper';
-enum StreamType {
-    CAMERA, SCREEN
-}
+import { RoomInfo, ErrorMediaStreamMessage, InfoMediaStreamMessage, MemberList } from './helper/roomHelper';
+import BaseComponent from './../../../BaseComponent';
+enum StreamType { CAMERA, SCREEN }
 const PEER_NEW = "PEER_NEW", CHAT_MESSAGE = "CHAT_MESSAGE", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
     roomCode?: string;
@@ -40,44 +30,48 @@ class State {
 const videoConstraint: MediaTrackConstraints = {
     width: { ideal: 40 }, height: { ideal: 40 }
 }
-class ConferenceRoomSteaming extends BaseMainMenus {
+const mediaStreamConfig: MediaStreamConstraints = { video: videoConstraint, audio: true };
+class ConferenceRoomSteaming extends BaseComponent {
+    
     state: State = new State();
     publicConferenceService: PublicConferenceService;
     memberRefs: Map<string, React.RefObject<MemberVideoStream>> = new Map();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
-    handshakeHandler: Record<string, (origin: string, data: WebRtcObject) => void>;
     videoStream?: MediaStream;
     videoStreamError: boolean = false;
     peerToDials: string[] = new Array();
     offersToHandle: Map<string, WebRtcObject> = new Map();
 
-
     constructor(props: any) {
-        super(props, "Conference", true);
+        super(props, true);
         this.publicConferenceService = this.getServices().publicConferenceService;
-        this.handshakeHandler = {
-            "offer": (origin: string, data: WebRtcObject) => {
-                this.handleOffer(origin, data);
-            },
-            "answer": (origin: string, data: WebRtcObject) => {
-                this.handleAnswer(origin, data);
-            },
-            "candidate": (origin: string, data: WebRtcObject) => {
-                this.handleCandidate(origin, data);
-            },
-            "dial": (origin: string, data: WebRtcObject) => {
-                this.handleDial(origin, data);
-            },
-        };
+
     }
+    handshakeHandler = (eventName: string, origin: string, data: WebRtcObject) => {
+        switch (eventName) {
+            case "offer":
+                this.handleOffer(origin, data);
+                break;
+            case "answer":
+                this.handleAnswer(origin, data);
+                break;
+            case "candidate":
+                this.handleCandidate(origin, data);
+                break;
+            case "dial":
+                this.handleDial(origin, data);
+                break;
+            default:
+                console.warn("NO HANDLER FOR: ",eventName);
+        }
+    };
     setLogEnabled = (val: boolean) => {
         this.setState({ logEnabled: val },
-            () =>
-                this.memberRefs.forEach(ref => {
-                    if (ref.current) {
-                        ref.current.setLogEnabled(val);
-                    }
-                }));
+            () => this.memberRefs.forEach(ref => {
+                if (ref.current) {
+                    ref.current.setLogEnabled(val);
+                }
+            }));
     }
     getMemberRef = (code: string): Promise<MemberVideoStream> => {
         // console.debug("this.memberRefs: ", this.memberRefs);
@@ -110,7 +104,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             } else {
                 this.offersToHandle.set(origin, data.data);
             }
-
         });
     }
     handleOffer = (origin: string, data: WebRtcObject) => {
@@ -118,7 +111,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.getMemberRef(origin).then(ref => {
             ref.handleOffer(origin, data.data, this.videoStream);
             if (!this.videoStream) {
-                ref.addLog("No VideoStream at offer: "+origin);
+                ref.addLog("No VideoStream at offer: " + origin);
                 this.offersToHandle.set(origin, data.data);
             }
         }).catch(console.error);
@@ -142,28 +135,18 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.cleanResources();
     }
     cleanResources = () => {
-        if (!this.videoStream) return;
-        console.debug("this.videoStream.getTracks(): ", this.videoStream.getTracks());
-        this.videoStream.getTracks().forEach(stream => {
-            stream.stop();
-            console.debug("Clean track : ", stream.kind);
-        })
+        this.publicConferenceService.cleanResources(this.videoStream);
     }
     recordLoaded = (response: WebResponse) => {
         if (response.conferenceRoom) {
             this.setState({ room: ConferenceRoomModel.clone(response.conferenceRoom) }, this.initialize);
-        } else { console.error("ROOM NOT FOUND") }
+        } else { alert("Unexpected Error: ROOM NOT FOUND") }
     }
     initialize = () => {
         //subscription
-        this.addOnWsConnectCallbacks({
-            id: 'USER_JOIN',
-            callback: this.notifyUserEnterRoom
-        },
-            {
-                id: "INIT_MEDIA_STREAM",
-                callback: this.initMediaStream
-            });
+        this.addOnWsConnectCallbacks(
+            { id: 'USER_JOIN', callback: this.notifyUserEnterRoom },
+            { id: "INIT_MEDIA_STREAM", callback: this.initMediaStream });
         //on connect
         this.addWebsocketSubscriptionCallback({
             id: 'CONFERENCE_STREAMING',
@@ -178,8 +161,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
 
     }
     notifyUserEnterRoom = () => {
-        this.commonAjax(
-            this.publicConferenceService.nofityUserEnter,
+        this.commonAjax(this.publicConferenceService.nofityUserEnter,
             (r) => { }, this.showCommonErrorAlert, this.state.roomCode);
     }
 
@@ -197,12 +179,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
     handleWebRtcHandshake = (eventId: string, origin: string, webRtcObject: WebRtcObject) => {
         console.info("webRtcHandshake: ", webRtcObject.event, " FROM ", origin);
-
-        if (!this.handshakeHandler[webRtcObject.event]) {
-            console.warn("Handler for ", webRtcObject.event, " NOT FOUND");
-            return;
-        }
-        this.handshakeHandler[webRtcObject.event](origin, webRtcObject);
+        this.handshakeHandler(webRtcObject.event, origin, webRtcObject);
         if (this.videoStream) {
             console.info("handleStream ", webRtcObject.event);
             this.handleStream(this.videoStream);
@@ -282,8 +259,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         }
 
         if (!this.videoStream) {
-            //videoStreamError == true
-            ref.current.notifyCallTo();
+            ref.current.requestDial();
             return;
         }
         console.debug("Will Create OFFER to: ", code);
@@ -344,10 +320,7 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
 
     initMediaStream = (redial: boolean = false) => {
-
-        const config: MediaStreamConstraints = { video: videoConstraint, audio: true };
-
-        let mediaStream = window.navigator.mediaDevices.getUserMedia(config)
+        let mediaStream = window.navigator.mediaDevices.getUserMedia(mediaStreamConfig)
         mediaStream
             .then((stream: MediaStream) => {
                 this.setState({ errorMessage: undefined, mediaStreamReady: true },
@@ -363,7 +336,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                 this.videoStreamError = true;
                 this.setState({ errorMessage: new String(e).toString(), mediaStreamReady: false })
             });
-
     }
 
     handleStream = (stream: MediaStream, updateVideoSrc: boolean = false) => {
@@ -391,9 +363,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
     }
     checkOffersWaiting = () => {
         console.debug("this.offersToHandle: ", this.offersToHandle.size);
-        if (this.offersToHandle.size > 0) {
-            alert("WILL ReHandle offfer: "+this.offersToHandle.size);
-        }
         this.offersToHandle.forEach((data, origin) => {
             this.dialPeerByCode(origin);
         })
@@ -406,7 +375,6 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         this.peerToDials = [];
     }
     leaveRoom = () => {
-        if (!this.state.roomCode) return;
         this.showConfirmationDanger("Leave Room?")
             .then(ok => {
                 if (!ok) return;
@@ -422,16 +390,14 @@ class ConferenceRoomSteaming extends BaseMainMenus {
             this.state.roomCode
         )
     }
-    retryMediaStream = () => {
-        this.initMediaStream(true);
-    }
-
+    retryMediaStream = () => this.initMediaStream(true);
     render() {
         const user: User | undefined = this.getLoggedUser();
+        const room = this.state.room;
         if (!user) return null;
         return (
             <>
-                {this.state.room ? <ChatMessagePanel room={this.state.room} /> : null}
+                {room ? <ChatMessagePanel room={room} /> : null}
                 <div id="ConferenceRoomSteaming" className="section-body container-fluid" >
 
                     <h2>STREAMING Room</h2>
@@ -439,35 +405,15 @@ class ConferenceRoomSteaming extends BaseMainMenus {
                         Welcome, <strong>{user.displayName}  </strong>
                     </div>
                     <Loading show={this.state.loading} />
-                    {this.state.room ?
+                    {room ?
                         <Fragment>
                             <RoomInfo setLogEnabled={this.setLogEnabled} logEnabled={this.state.logEnabled} videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
-                                leaveRoom={this.leaveRoom} room={this.state.room} />
+                                leaveRoom={this.leaveRoom} room={room} />
                             <p />
-                            {this.state.mediaStreamReady? 
-                                <div className="alert alert-primary">Media Stream Ready</div>:null
-                            }
-                            {this.state.errorMessage ?
-                                <Fragment>
-                                    <SimpleError>Error: {this.state.errorMessage}</SimpleError>
-                                    <AnchorWithIcon iconClassName="fas fa-redo" onClick={this.retryMediaStream}>Retry Media</AnchorWithIcon>
-                                </Fragment>
-                                : null}
-                            {/* <MemberList memberRefs={this.memberRefs} user={user} members={this.state.room.members} room={this.state.room} /> */}
-                            <Card>
-                                <div className="row">
-                                    {this.state.room.members.map((member: User, i) => {
-                                        member = UserModel.clone(member);
-                                        if (!this.memberRefs.get(member.getCode())) {
-                                            this.memberRefs.set(member.getCode(), React.createRef());
-                                        }
-                                        return (
-                                            <MemberVideoStream redial={this.dialPeerByCode} ref={this.memberRefs.get(member.getCode())} user={user} member={member}
-                                                room={this.state.room ?? new ConferenceRoomModel()} key={"vid-stream-" + member.code} />
-                                        )
-                                    })}
-                                </div>
-                            </Card>
+                            <InfoMediaStreamMessage message={this.state.mediaStreamReady ? "Media Stream Ready" : undefined} />
+                            <ErrorMediaStreamMessage retry={this.retryMediaStream} message={this.state.errorMessage} />
+                            <MemberList user={user} room={room}
+                                memberRefs={this.memberRefs} dialPeerByCode={this.dialPeerByCode} />
 
                         </Fragment>
                         : <SimpleWarning children="No Data" />
@@ -477,15 +423,12 @@ class ConferenceRoomSteaming extends BaseMainMenus {
         )
     }
 }
-const Loading = (props) => {
+const Loading = (props: { show: boolean }) => {
     return (
-        props.loading ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
-
+        props.show == true ? <Spinner style={{ zIndex: 1000, position: 'absolute', width: '100%', marginTop: 20 }} />
             : null
     )
 }
-
-
 export default withRouter(connect(
     mapCommonUserStateToProps
 )(ConferenceRoomSteaming))
