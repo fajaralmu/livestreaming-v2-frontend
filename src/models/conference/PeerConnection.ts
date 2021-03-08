@@ -49,9 +49,12 @@ export default class PeerConnection extends RTCPeerConnection {
             console.debug("stream: ", ev.streams);
             this.component.addLog("ON TRACK");
             const vid = this.component.videoRef.current;
+            if (this.component.profileImageRef.current) {
+                this.component.profileImageRef.current.style.display = 'none';
+            }
             if (vid) {
                 vid.srcObject = ev.streams[0];
-                vid.style.visibility = "visible";
+                vid.style.display = "block";
                 vid.addEventListener('canplay', function (ev) {
                     this.play();
                 }, false);

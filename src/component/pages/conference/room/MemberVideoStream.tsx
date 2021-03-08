@@ -8,21 +8,24 @@ import PeerConnection from '../../../../models/conference/PeerConnection';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import HandshakeLog from './HandshakeLog';
 import ToggleButton from '../../../navigation/ToggleButton';
+import { baseImageUrl } from './../../../../constant/Url';
 interface Props {
     user: UserModel, member: UserModel,
     room: ConferenceRoomModel, redial(code: string): any
 }
 class State {
     videoVisible: boolean = false;
-    showLog:boolean= false;
-   
+    showLog: boolean = false;
+    enableLog: boolean = false;
+
 }
 export default class MemberVideoStream extends Component<Props, State> {
-   
-    trackAdded: boolean = false; 
+
+    trackAdded: boolean = false;
     peerConnection?: PeerConnection;
     logRef: React.RefObject<HandshakeLog> = React.createRef();
     videoRef: React.RefObject<HTMLVideoElement> = React.createRef();
+    profileImageRef: React.RefObject<HTMLImageElement> = React.createRef();
     tracks: MediaStreamTrack[] = new Array();
     stream?: MediaStream;
     constructor(props) {
@@ -37,9 +40,12 @@ export default class MemberVideoStream extends Component<Props, State> {
         return false;
     }
     setLogEnabled = (val: boolean) => {
-        if (this.logRef.current) {
-            this.logRef.current.setLogEnabled(val);
-        }
+
+        this.setState({ enableLog: val }, () => {
+            if (this.logRef.current) {
+                this.logRef.current.setLogEnabled(val);
+            }
+        });
     }
 
     private addStream = (stream: MediaStream) => {
@@ -75,7 +81,7 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
         console.debug("generate new RTCPeer Connection");
         this.tracks = [];
-        this.peerConnection = new PeerConnection( this.getMember().code, this);
+        this.peerConnection = new PeerConnection(this.getMember().code, this);
         return this.peerConnection;
     }
 
@@ -89,7 +95,7 @@ export default class MemberVideoStream extends Component<Props, State> {
 
     componentDidMount = () => {
         if (this.videoRef.current) {
-            this.videoRef.current.style.visibility = 'hidden';
+            this.videoRef.current.style.display = 'none';
         }
     }
 
@@ -97,13 +103,13 @@ export default class MemberVideoStream extends Component<Props, State> {
         const peerConnection = this.getConnection(true);
         this.addStream(stream);
         peerConnection.performCreateOffer(this.trackAdded);
-    } 
+    }
 
     errorSessionDescription = (error, type: string) => {
         console.error("ERROR SET SESSION DESCRIPTION while ", type, ": ", error);
     }
     requestDial = () => {
-        this.addLog("REQUEST CALLING FROM :" +this.getMember().code);
+        this.addLog("REQUEST CALLING FROM :" + this.getMember().code);
         this.sendHandshake('dial', {});
     }
 
@@ -139,7 +145,7 @@ export default class MemberVideoStream extends Component<Props, State> {
 
     }
 
-    toggleLog = (show:boolean) =>{this.setState({showLog: show})}
+    toggleLog = (show: boolean) => { this.setState({ showLog: show }) }
     isCurrentUser = (): boolean => this.props.user.code == this.props.member.code;
     redial = () => this.props.redial(this.getMember().code);
     getMember = (): UserModel => this.props.member
@@ -154,12 +160,13 @@ export default class MemberVideoStream extends Component<Props, State> {
         const member = this.getMember();
         return <div className="col-md-3 text-center">
             <Card title={
-                <label style={{fontSize:'0.8em'}}>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check" /> : "")}</label>}>
+                <strong style={{ fontSize: '0.8em', wordWrap:'unset' }}>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check-circle" /> : "")}</strong>}>
                 <div>
                     {this.isCurrentUser() ?
                         <h2>You</h2> :
                         <Fragment>
-                            <video height={100} width={100} controls ref={this.videoRef} />
+                            <video style={{margin:'auto'}} height={100} width={100} controls ref={this.videoRef} />
+                            <img ref={this.profileImageRef} className="border border-dark rounded-circle" src={baseImageUrl()+member.profileImage} width={70} height={70} />
                             <br />
                             <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-phone" onClick={this.redial} >Dial</AnchorWithIcon>
                         </Fragment>
@@ -169,8 +176,12 @@ export default class MemberVideoStream extends Component<Props, State> {
                     <p>local desc: {JSON.stringify(this.getPeerConnection().localDescription)}</p>
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>
                 </div> */}
-                <ToggleButton yesLabel="Show Log" active={this.state.showLog} onClick={this.toggleLog} noLabel="Hide Log" />
-                <HandshakeLog show={this.state.showLog} ref={this.logRef} />
+                {this.state.enableLog ?
+                    <>
+                    <label className="text-center">Log Options</label>
+                        <ToggleButton yesLabel="Show" active={this.state.showLog} onClick={this.toggleLog} noLabel="Hide" />
+                        <HandshakeLog show={this.state.showLog} ref={this.logRef} />
+                    </> : null}
             </Card></div>
 
     }
