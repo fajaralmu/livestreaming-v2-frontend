@@ -47,7 +47,8 @@ export const ErrorMediaStreamMessage = (props: { message?: string, retry(): any 
     )
 }
 export const RoomInfo = (props: { logEnabled: boolean, setLogEnabled(val: boolean): any, videoRef: React.RefObject<HTMLVideoElement>, redialAll(): any, memberRefs: Map<string, RefObject<MemberVideoStream>>, user: UserModel, room: ConferenceRoomModel, leaveRoom(): any }) => {
-    const room: ConferenceRoomModel = ConferenceRoomModel.clone(props.room);
+    const room: ConferenceRoomModel = (props.room).clone();
+    const config = room.config;
     return (
         <Card >
             <div className="row">
@@ -57,6 +58,7 @@ export const RoomInfo = (props: { logEnabled: boolean, setLogEnabled(val: boolea
                 <div className="col-md-8">
                     <FormGroup label="Code">{room.code}</FormGroup>
                     <FormGroup label="Created" >{room.createdDate ? new Date(room.createdDate).toLocaleString() : "-"}</FormGroup>
+                    <FormGroup label="Size">{config.videoWidth} x {config.videoHeight}</FormGroup>
                     <FormGroup label="Enable Log">
                         <ToggleButton active={props.logEnabled} onClick={props.setLogEnabled} />
                     </FormGroup>

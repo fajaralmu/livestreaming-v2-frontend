@@ -318,9 +318,15 @@ class ConferenceRoomSteaming extends BaseComponent {
             this.getRoomCodeFromProps();
         }
     }
-
+    getMediaStreamConfig = () :MediaStreamConstraints => {
+        if (this.state.room) {
+            return this.state.room.getMediaStreamConfig();
+        }
+        return mediaStreamConfig;
+    }
     initMediaStream = (redial: boolean = false) => {
-        let mediaStream = window.navigator.mediaDevices.getUserMedia(mediaStreamConfig)
+        console.debug("INIT MEDIA STREAM video:",this.getMediaStreamConfig().video);
+        let mediaStream = window.navigator.mediaDevices.getUserMedia(this.getMediaStreamConfig())
         mediaStream
             .then((stream: MediaStream) => {
                 this.setState({ errorMessage: undefined, mediaStreamReady: true },
