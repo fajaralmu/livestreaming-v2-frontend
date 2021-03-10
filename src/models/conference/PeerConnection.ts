@@ -8,9 +8,18 @@ app.streaming.ice.iceTurnServer=turn:206.253.167.195:3478
 app.streaming.ice.iceTurnServer.username=username1
 app.streaming.ice.iceTurnServer.password=password1
  */
+/**
+ * stun1.l.google.com:19302
+stun2.l.google.com:19302
+stun3.l.google.com:19302
+stun4.l.google.com:19302
+ */
 const config: RTCConfiguration = {
         "iceServers": [
-            { "urls": "stun:stun2.1.google.com:19302" }
+            { "urls": "stun:stun.l.google.com:19302" },
+            { "urls": "stun:stun2.l.google.com:19302" },
+            { "urls": "stun:stun3.l.google.com:19302" },
+            { "urls": "stun:stun4.l.google.com:19302" }
             ,{
                   "urls":"turn:206.253.167.195:3478",
                   "username": "username1",
