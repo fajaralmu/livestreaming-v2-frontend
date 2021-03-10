@@ -134,9 +134,9 @@ class ConferenceRoomSteaming extends BaseComponent {
         console.debug("WILL UNMOUNT");
         this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
         removeOnConnecCallbacks('USER_JOIN', 'INIT_MEDIA_STREAM');
-        this.cleanResources();
+        this.cleanMediaResources();
     }
-    cleanResources = () => {
+    cleanMediaResources = () => {
         this.publicConferenceService.cleanMediaStreamResources(this.videoStream);
     }
     recordLoaded = (response: WebResponse) => {
@@ -148,7 +148,7 @@ class ConferenceRoomSteaming extends BaseComponent {
         //subscription
         this.addOnWsConnectCallbacks(
             { id: 'USER_JOIN', callback: this.notifyUserEnterRoom },
-            // { id: "INIT_MEDIA_STREAM", callback: this.initMediaStream }
+            { id: "INIT_MEDIA_STREAM", callback: this.initMediaStream }
         );
         //on connect
         this.addWebsocketSubscriptionCallback({
@@ -404,7 +404,7 @@ class ConferenceRoomSteaming extends BaseComponent {
         if (!room) return;
         room.started = true;
         room.mediaShare = mediaShare;
-        this.cleanResources();
+        this.cleanMediaResources();
         this.setState({ room: room }, () => this.initMediaStream(true))
     }
     retryMediaStream = () => this.initMediaStream(true);
@@ -445,7 +445,8 @@ class ConferenceRoomSteaming extends BaseComponent {
     }
 }
 const StartStream = (props: { startStream(mediaShare: MediaShare): any }) => {
-
+    return null;
+    //TODO: fix
     return (
         <div className="container-fluid text-center ">
             <h3>Start Media:</h3>

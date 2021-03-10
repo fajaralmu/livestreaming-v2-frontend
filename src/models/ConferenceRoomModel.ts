@@ -19,7 +19,7 @@ export default class ConferenceRoomModel extends BaseModel {
 	}
 	//
 	mediaShare:MediaShare = MediaShare.VIDEO_AUDIO;
-	started:boolean = false;
+	started:boolean = true;//false;
 
 	///
 	code: string = uniqueId();
