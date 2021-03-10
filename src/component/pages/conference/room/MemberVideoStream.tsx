@@ -158,31 +158,32 @@ export default class MemberVideoStream extends Component<Props, State> {
         }
         const room = this.getRoom();
         const member = this.getMember();
-        return <div className="col-md-3 text-center">
-            <Card title={
-                <strong style={{ fontSize: '0.8em', wordWrap:'unset' }}>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check-circle" /> : "")}</strong>}>
-                <div>
-                    {this.isCurrentUser() ?
-                        <h2>You</h2> :
-                        <Fragment>
-                            <video style={{margin:'auto'}} height={100} width={100} controls ref={this.videoRef} />
-                            <img ref={this.profileImageRef} className="border border-dark rounded-circle" src={baseImageUrl()+member.profileImage} width={70} height={70} />
-                            <br />
-                            <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-phone" onClick={this.redial} >Dial</AnchorWithIcon>
-                        </Fragment>
-                    }</div>
-                {/* <p>{this.peerConnection?.senderInfo()}</p> */}
-                {/* <div>
+        return <div className="col-md-3 col-lg-2 text-center border border-dark rounded">
+            <span style={{ fontSize: '0.6em', wordWrap: 'unset' }}>{member.displayName} {(room.isAdmin(member) ? <i className="fas fa-check-circle" /> : "")}</span>
+            <hr />
+            <div>
+                {this.isCurrentUser() ?
+                    <h2>You</h2> :
+                    <Fragment>
+                        <video style={{ margin: 'auto' }} height={80} width={80} controls ref={this.videoRef} />
+                        <img ref={this.profileImageRef} className="border border-dark rounded-circle" src={baseImageUrl() + member.profileImage} width={70} height={70} />
+                        <br />
+                        <AnchorWithIcon className="btn btn-light btn-sm" iconClassName="fas fa-phone" onClick={this.redial} >Dial</AnchorWithIcon>
+                    </Fragment>
+                }
+            </div>
+            {/* <p>{this.peerConnection?.senderInfo()}</p> */}
+            {/* <div>
                     <p>local desc: {JSON.stringify(this.getPeerConnection().localDescription)}</p>
                     <p>remote desc: {JSON.stringify(this.getPeerConnection().remoteDescription)}</p>
                 </div> */}
-                {this.state.enableLog ?
-                    <>
+            {this.state.enableLog ?
+                <>
                     <label className="text-center">Log Options</label>
-                        <ToggleButton yesLabel="Show" active={this.state.showLog} onClick={this.toggleLog} noLabel="Hide" />
-                        <HandshakeLog show={this.state.showLog} ref={this.logRef} />
-                    </> : null}
-            </Card></div>
+                    <ToggleButton yesLabel="Show" active={this.state.showLog} onClick={this.toggleLog} noLabel="Hide" />
+                    <HandshakeLog show={this.state.showLog} ref={this.logRef} />
+                </> : null}
+        </div>
 
     }
 }

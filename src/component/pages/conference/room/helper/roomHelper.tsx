@@ -7,24 +7,28 @@ import ToggleButton from '../../../../navigation/ToggleButton';
 import MemberVideoStream from '../MemberVideoStream';
 import UserModel from '../../../../../models/UserModel';
 import SimpleError from '../../../../alert/SimpleError';
-export const MemberList = (props: { room:ConferenceRoomModel, user:UserModel, 
-    memberRefs:Map<string,React.RefObject<MemberVideoStream>>, dialPeerByCode(code:string):any }) => {
-    const user =props.user;
+export const MemberList = (props: {
+    room: ConferenceRoomModel, user: UserModel,
+    memberRefs: Map<string, React.RefObject<MemberVideoStream>>, dialPeerByCode(code: string): any
+}) => {
+    const user = props.user;
     const members: UserModel[] = props.room.members;
     return (
-        <Card title={"Members ("+(members.length)+")"}>
-            <div className="row">
-                {members.map((member: UserModel, i) => {
-                    member = UserModel.clone(member);
-                    if (!props.memberRefs.get(member.getCode())) {
-                        props.memberRefs.set(member.getCode(), React.createRef());
-                    }
-                    return (
-                        <MemberVideoStream redial={props.dialPeerByCode} ref={props.memberRefs.get(member.getCode())} 
-                        user={user} member={member}
-                            room={props.room} key={"vid-stream-" + member.code} />
-                    )
-                })}
+        <Card title={"Members (" + (members.length) + ")"}>
+            <div className="container-fluid" style={{ overflow: 'scroll' }}>
+                <div className="row">
+                    {members.map((member: UserModel, i) => {
+                        member = UserModel.clone(member);
+                        if (!props.memberRefs.get(member.getCode())) {
+                            props.memberRefs.set(member.getCode(), React.createRef());
+                        }
+                        return (
+                            <MemberVideoStream redial={props.dialPeerByCode} ref={props.memberRefs.get(member.getCode())}
+                                user={user} member={member}
+                                room={props.room} key={"vid-stream-" + member.code} />
+                        )
+                    })}
+                </div>
             </div>
         </Card>
     )
