@@ -1,8 +1,8 @@
 import React, { ChangeEvent } from 'react'
-import BaseComponent from './../../../BaseComponent';
-import PublicConferenceService from './../../../../services/PublicConferenceService';
+import BaseComponent from '../../../../BaseComponent';
+import PublicConferenceService from '../../../../../services/PublicConferenceService';
 import { connect } from 'react-redux';
-import { mapCommonUserStateToProps } from './../../../../constant/stores';
+import { mapCommonUserStateToProps } from '../../../../../constant/stores';
 
 class ChatFormState {
     showChat: boolean = false;

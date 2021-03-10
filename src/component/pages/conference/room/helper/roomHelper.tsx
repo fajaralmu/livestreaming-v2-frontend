@@ -7,6 +7,7 @@ import ToggleButton from '../../../../navigation/ToggleButton';
 import MemberVideoStream from '../MemberVideoStream';
 import UserModel from '../../../../../models/UserModel';
 import SimpleError from '../../../../alert/SimpleError';
+import SimpleWarning from '../../../../alert/SimpleWarning';
 export const MemberList = (props: {
     room: ConferenceRoomModel, user: UserModel,
     memberRefs: Map<string, React.RefObject<MemberVideoStream>>, dialPeerByCode(code: string): any
@@ -57,7 +58,10 @@ export const RoomInfo = (props: { logEnabled: boolean, setLogEnabled(val: boolea
         <Card >
             <div className="row">
                 <div className="col-md-4">
+                    {room.started?
                     <video muted ref={props.videoRef} height={200} width={200} controls />
+                    : <SimpleWarning>Please Start MEDIA</SimpleWarning>
+}
                 </div>
                 <div className="col-md-8">
                     <FormGroup label="Code">{room.code}</FormGroup>

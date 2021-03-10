@@ -3,16 +3,25 @@ import BaseModel from './BaseModel';
 import { uniqueId } from './../utils/StringUtil';
 import ChatMessageModel from './ChatMessageModel';
 import AppliactionConfiguration from './ApplicationConfiguration';
+import { MediaShare } from '../constant/MediaShare';
 
 export default class ConferenceRoomModel extends BaseModel {
+
 	getMediaStreamConfig = (): MediaStreamConstraints => {
+		console.debug("this.mediaShare: ", this.mediaShare);
 		const videoConstraint: MediaTrackConstraints = {
 			width: { ideal: this.config.videoWidth }, height: { ideal: this.config.videoHeight }
 		}
-		const mediaStreamConfig: MediaStreamConstraints = { video: videoConstraint, audio: true };
+		const mediaStreamConfig: MediaStreamConstraints = { video: 
+			this.mediaShare == MediaShare.VIDEO_AUDIO?
+			 videoConstraint:false, audio: true };
 		return mediaStreamConfig;
 	}
+	//
+	mediaShare:MediaShare = MediaShare.VIDEO_AUDIO;
+	started:boolean = false;
 
+	///
 	code: string = uniqueId();
 	active: boolean = false;
 	user?: UserModel;

@@ -58,7 +58,7 @@ export default class PublicConferenceService {
         return commonAjaxPostCalls(endpoint, request);
     }
 
-    cleanResources = (stream?: MediaStream) => {
+    cleanMediaStreamResources = (stream?: MediaStream) => {
 
         if (!stream) return;
         console.debug("this.videoStream.getTracks(): ", stream.getTracks());

@@ -1,12 +1,11 @@
 import React, { Component, Fragment } from 'react';
-import Card from './../../../container/Card';
 import UserModel from './../../../../models/UserModel';
 import ConferenceRoomModel from './../../../../models/ConferenceRoomModel';
 import { uniqueId } from './../../../../utils/StringUtil';
 import { sendToWebsocket } from './../../../../utils/websockets';
 import PeerConnection from '../../../../models/conference/PeerConnection';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
-import HandshakeLog from './HandshakeLog';
+import HandshakeLog from './helper/HandshakeLog';
 import ToggleButton from '../../../navigation/ToggleButton';
 import { baseImageUrl } from './../../../../constant/Url';
 interface Props {
@@ -17,7 +16,6 @@ class State {
     videoVisible: boolean = false;
     showLog: boolean = false;
     enableLog: boolean = false;
-
 }
 export default class MemberVideoStream extends Component<Props, State> {
 

@@ -13,9 +13,11 @@ import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
 import ChatMessageModel from './../../../../models/ChatMessageModel';
-import ChatMessagePanel from './ChatMessagePanel';
+import ChatMessagePanel from './chat/ChatMessagePanel';
 import { RoomInfo, ErrorMediaStreamMessage, InfoMediaStreamMessage, MemberList } from './helper/roomHelper';
 import BaseComponent from './../../../BaseComponent';
+import { MediaShare } from '../../../../constant/MediaShare';
+import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 enum StreamType { CAMERA, SCREEN }
 const PEER_NEW = "PEER_NEW", CHAT_MESSAGE = "CHAT_MESSAGE", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
@@ -32,7 +34,7 @@ const videoConstraint: MediaTrackConstraints = {
 }
 const mediaStreamConfig: MediaStreamConstraints = { video: videoConstraint, audio: true };
 class ConferenceRoomSteaming extends BaseComponent {
-    
+
     state: State = new State();
     publicConferenceService: PublicConferenceService;
     memberRefs: Map<string, React.RefObject<MemberVideoStream>> = new Map();
@@ -62,7 +64,7 @@ class ConferenceRoomSteaming extends BaseComponent {
                 this.handleDial(origin, data);
                 break;
             default:
-                console.warn("NO HANDLER FOR: ",eventName);
+                console.warn("NO HANDLER FOR: ", eventName);
         }
     };
     setLogEnabled = (val: boolean) => {
@@ -135,7 +137,7 @@ class ConferenceRoomSteaming extends BaseComponent {
         this.cleanResources();
     }
     cleanResources = () => {
-        this.publicConferenceService.cleanResources(this.videoStream);
+        this.publicConferenceService.cleanMediaStreamResources(this.videoStream);
     }
     recordLoaded = (response: WebResponse) => {
         if (response.conferenceRoom) {
@@ -146,7 +148,8 @@ class ConferenceRoomSteaming extends BaseComponent {
         //subscription
         this.addOnWsConnectCallbacks(
             { id: 'USER_JOIN', callback: this.notifyUserEnterRoom },
-            { id: "INIT_MEDIA_STREAM", callback: this.initMediaStream });
+            // { id: "INIT_MEDIA_STREAM", callback: this.initMediaStream }
+        );
         //on connect
         this.addWebsocketSubscriptionCallback({
             id: 'CONFERENCE_STREAMING',
@@ -318,14 +321,14 @@ class ConferenceRoomSteaming extends BaseComponent {
             this.getRoomCodeFromProps();
         }
     }
-    getMediaStreamConfig = () :MediaStreamConstraints => {
+    getMediaStreamConfig = (): MediaStreamConstraints => {
         if (this.state.room) {
             return this.state.room.getMediaStreamConfig();
         }
         return mediaStreamConfig;
     }
     initMediaStream = (redial: boolean = false) => {
-        console.debug("INIT MEDIA STREAM video:",this.getMediaStreamConfig().video);
+        console.debug("INIT MEDIA STREAM video:", this.getMediaStreamConfig().video);
         let mediaStream = window.navigator.mediaDevices.getUserMedia(this.getMediaStreamConfig())
         mediaStream
             .then((stream: MediaStream) => {
@@ -396,6 +399,14 @@ class ConferenceRoomSteaming extends BaseComponent {
             this.state.roomCode
         )
     }
+    startStream = (mediaShare: MediaShare) => {
+        const room = this.state.room;
+        if (!room) return;
+        room.started = true;
+        room.mediaShare = mediaShare;
+        this.cleanResources();
+        this.setState({ room: room }, () => this.initMediaStream(true))
+    }
     retryMediaStream = () => this.initMediaStream(true);
     render() {
         const user: User | undefined = this.getLoggedUser();
@@ -413,7 +424,11 @@ class ConferenceRoomSteaming extends BaseComponent {
                     <Loading show={this.state.loading} />
                     {room ?
                         <Fragment>
-                            <RoomInfo setLogEnabled={this.setLogEnabled} logEnabled={this.state.logEnabled} videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
+                            <StartStream startStream={this.startStream} />
+                            <p/>
+                            <RoomInfo setLogEnabled={this.setLogEnabled}
+                                logEnabled={this.state.logEnabled}
+                                videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={room} />
                             <p />
                             <InfoMediaStreamMessage message={this.state.mediaStreamReady ? "Media Stream Ready" : undefined} />
@@ -428,6 +443,20 @@ class ConferenceRoomSteaming extends BaseComponent {
             </>
         )
     }
+}
+const StartStream = (props: { startStream(mediaShare: MediaShare): any }) => {
+
+    return (
+        <div className="container-fluid text-center ">
+            <h3>Start Media:</h3>
+            <AnchorWithIcon iconClassName="fas fa-video" onClick={() => { props.startStream(MediaShare.VIDEO_AUDIO) }}>
+                Video
+            </AnchorWithIcon>
+            <AnchorWithIcon iconClassName="fas fa-microphone" onClick={() => { props.startStream(MediaShare.AUDIO) }} >
+                Audio Only
+            </AnchorWithIcon>
+        </div>
+    )
 }
 const Loading = (props: { show: boolean }) => {
     return (

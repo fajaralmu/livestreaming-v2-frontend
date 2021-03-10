@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { uniqueId } from './../../../../utils/StringUtil';
-import AnchorWithIcon from './../../../navigation/AnchorWithIcon';
+import { uniqueId } from '../../../../../utils/StringUtil';
+import AnchorWithIcon from '../../../../navigation/AnchorWithIcon';
 class State {
     logs: string[] = [];
 }

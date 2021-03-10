@@ -1,10 +1,10 @@
 import React, { ChangeEvent, Component, Fragment } from 'react'
-import ConferenceRoomModel from './../../../../models/ConferenceRoomModel';
+import ConferenceRoomModel from '../../../../../models/ConferenceRoomModel';
 import './ChatPanel.css'
-import ChatMessageModel from './../../../../models/ChatMessageModel';
-import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
-import BaseComponent from './../../../BaseComponent';
-import PublicConferenceService from './../../../../services/PublicConferenceService';
+import ChatMessageModel from '../../../../../models/ChatMessageModel';
+import AnchorWithIcon from '../../../../navigation/AnchorWithIcon';
+import BaseComponent from '../../../../BaseComponent';
+import PublicConferenceService from '../../../../../services/PublicConferenceService';
 import ChatForm from './ChatForm';
 interface Props {
     room: ConferenceRoomModel;

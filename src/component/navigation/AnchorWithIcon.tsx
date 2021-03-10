@@ -1,7 +1,17 @@
 
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-export default class AnchorWithIcon extends Component<any, any>
+interface Props {
+    show?:boolean,
+    to?:string,
+    className?:string,
+    iconClassName?:string,
+    attributes?:any,
+    style?:any,
+    onClick ?:(e)=>void
+
+}
+export default class AnchorWithIcon extends Component<Props, any>
 {
     constructor(props: any) {
         super(props);
