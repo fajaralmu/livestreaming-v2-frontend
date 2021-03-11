@@ -6,15 +6,17 @@ import User from '../models/UserModel';
 import Services from './../services/Services';
 import { AuthorityType } from '../models/AuthorityType';
 import WebRequest from './../models/WebRequest';
-import { addOnWsConnectCallbacks, performWebsocketConnection, registerWebSocketCallbacks, removeWebsocketCallback, sendToWebsocket } from './../utils/websockets';
+import WebSocketService from './../services/WebSocketService';
+import { getStore } from './../redux/configureStore';
 
 export default class BaseComponent extends Component<any, any> {
     parentApp: any;
     authenticated: boolean = true;
     state: any = { updated: new Date() };
+    websocketService:WebSocketService;
     constructor(props: any, authenticated = false) {
         super(props);
-
+        this.websocketService = this.getServices().websocketService;
         this.authenticated = authenticated
         this.state = {
             ...this.state
@@ -32,7 +34,7 @@ export default class BaseComponent extends Component<any, any> {
     }
 
     protected sendWebSocket = (url: string, payload: WebRequest) => {
-        sendToWebsocket(url, payload);
+       this.websocketService. sendToWebsocket(url, payload);
     }
 
     protected setWsUpdateHandler = (handler: Function | undefined) => {
@@ -42,23 +44,23 @@ export default class BaseComponent extends Component<any, any> {
     }
     //:{id:string, subscribeUrl:string, callback(response:WebResponse):any}
     protected addWebsocketSubscriptionCallback = (...callbacks:any[]) => {
-        registerWebSocketCallbacks(...callbacks);
+        this.websocketService.registerWebSocketCallbacks(...callbacks);
         
     }
 
     protected connectWs = () =>{
-        performWebsocketConnection();
+        this.websocketService.performWebsocketConnection();
     }
     
    protected addOnWsConnectCallbacks = (...onWsConnectCallbacks) => {
-        addOnWsConnectCallbacks(...onWsConnectCallbacks);
+    this.websocketService.addOnWsConnectCallbacks(...onWsConnectCallbacks);
     }
     protected removeWSSubscriptionCallback = (...id) => {
         for (let i = 0; i < id.length; i++) {
-            removeWebsocketCallback(id[i]);
+            this.websocketService.removeWebsocketCallback(id[i]);
         }
        
-        performWebsocketConnection();
+        this.websocketService. performWebsocketConnection();
     }
     protected resetWsUpdateHandler = () => {
         if (this.parentApp) {
@@ -212,6 +214,9 @@ export default class BaseComponent extends Component<any, any> {
     }
 
     getServices = (): Services => {
-        return this.props.services;
+        const store = getStore(); 
+        const state = store.getState();
+        return state.servicesState.services;
     }
+     
 }

@@ -7,8 +7,7 @@ import PublicConferenceService from '../../../../services/PublicConferenceServic
 import ConferenceRoomModel from '../../../../models/ConferenceRoomModel';
 import WebResponse from '../../../../models/WebResponse';
 import Spinner from '../../../loader/Spinner';
-import SimpleWarning from '../../../alert/SimpleWarning';
-import { removeOnConnecCallbacks } from '../../../../utils/websockets';
+import SimpleWarning from '../../../alert/SimpleWarning'; 
 import WebRtcObject from '../../../../models/conference/WebRtcObject';
 import MemberVideoStream from './MemberVideoStream';
 import { doItLater } from './../../../../utils/EventUtil';
@@ -18,6 +17,7 @@ import { RoomInfo, ErrorMediaStreamMessage, InfoMediaStreamMessage, MemberList }
 import BaseComponent from './../../../BaseComponent';
 import { MediaShare } from '../../../../constant/MediaShare';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
+import WebSocketService from './../../../../services/WebSocketService';
 enum StreamType { CAMERA, SCREEN }
 const PEER_NEW = "PEER_NEW", CHAT_MESSAGE = "CHAT_MESSAGE", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
@@ -43,11 +43,12 @@ class ConferenceRoomSteaming extends BaseComponent {
     videoStreamError: boolean = false;
     peerToDials: string[] = new Array();
     offersToHandle: Map<string, WebRtcObject> = new Map();
+    wsService:WebSocketService ;
 
     constructor(props: any) {
         super(props, true);
         this.publicConferenceService = this.getServices().publicConferenceService;
-
+        this.wsService = this.getServices().websocketService;
     }
     handshakeHandler = (eventName: string, origin: string, data: WebRtcObject) => {
         switch (eventName) {
@@ -132,9 +133,12 @@ class ConferenceRoomSteaming extends BaseComponent {
     }
     componentWillUnmount() {
         console.debug("WILL UNMOUNT");
-        this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
-        removeOnConnecCallbacks('USER_JOIN', 'INIT_MEDIA_STREAM');
+        this.resetWsCallbacks();
         this.cleanMediaResources();
+    }
+    resetWsCallbacks = () => {
+        this.removeWSSubscriptionCallback('CONFERENCE_STREAMING', 'PEER_HANDSHAKE');
+        this.wsService.removeOnConnecCallbacks('USER_JOIN', 'INIT_MEDIA_STREAM');
     }
     cleanMediaResources = () => {
         this.publicConferenceService.cleanMediaStreamResources(this.videoStream);
@@ -260,7 +264,6 @@ class ConferenceRoomSteaming extends BaseComponent {
             this.peerToDials.push(code);
             return;
         }
-
         if (!this.videoStream) {
             ref.current.requestDial();
             return;
@@ -282,7 +285,7 @@ class ConferenceRoomSteaming extends BaseComponent {
         }
     }
     updateRoomState = (room: ConferenceRoomModel) => {
-        this.setState({ room: room.clone() });
+        this.setState({ room: ConferenceRoomModel.clone(room) });
     }
     backToRoomMain = () => {
         this.props.history.push("/conference/room");
@@ -309,8 +312,7 @@ class ConferenceRoomSteaming extends BaseComponent {
         }
         this.commonAjax(
             this.publicConferenceService.enterRoom,
-            this.recordLoaded,
-            this.showCommonErrorAlert,
+            this.recordLoaded, this.showCommonErrorAlert,
             this.state.roomCode
         )
     }
@@ -425,9 +427,8 @@ class ConferenceRoomSteaming extends BaseComponent {
                     {room ?
                         <Fragment>
                             <StartStream startStream={this.startStream} />
-                            <p/>
-                            <RoomInfo setLogEnabled={this.setLogEnabled}
-                                logEnabled={this.state.logEnabled}
+                            <p />
+                            <RoomInfo setLogEnabled={this.setLogEnabled} logEnabled={this.state.logEnabled}
                                 videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={room} />
                             <p />

@@ -1,4 +1,5 @@
 import {  getStore } from '../redux/configureStore';
+import Services from './../services/Services';
 export const commonAuthorizedHeader = () => {
     return {
         'Content-Type': 'application/json',
@@ -20,6 +21,13 @@ export const getAssetsPath = () :string => {
     if (null == store) return "";
     const state = store.getState();
     return state.userState.assetsPath;
+}
+ 
+export const getServices = () :Services => {
+    const store = getStore(); 
+    // if (null == store) return new Services();
+    const state = store.getState();
+    return state.servicesState.services;
 }
 
 export const getRequestId = () :string => {

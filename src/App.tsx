@@ -11,13 +11,13 @@ import Loader from './component/loader/Loader';
 import Alert from './component/alert/Alert';
 import MainLayout from './component/layout/MainLayout';
 import WebResponse from './models/WebResponse';
-import Spinner from './component/loader/Spinner';
-import { performWebsocketConnection, setWebSocketUrl, registerWebSocketCallbacks } from './utils/websockets';
+import Spinner from './component/loader/Spinner'; 
 import UserService from './services/UserService';
 import AnchorWithIcon from './component/navigation/AnchorWithIcon';
 import { time } from 'console';
 import { doItLater, updateFavicon } from './utils/EventUtil'; 
 import SimpleError from './component/alert/SimpleError';
+import WebSocketService from './services/WebSocketService';
 
 class IState {
   loading: boolean = false;
@@ -41,6 +41,7 @@ class App extends Component<any, IState> {
   wsUpdateHandler: Function | undefined = undefined;
   clientRef: RefObject<SockJsClient> = React.createRef();
   userService: UserService;
+  wsService: WebSocketService;
   // alertRef: RefObject<Alert> = React.createRef();
   alertCallback = {
     title: "Info", message: "Info", yesOnly: false,
@@ -51,6 +52,7 @@ class App extends Component<any, IState> {
     super(props);
     this.state = new IState();
     this.userService = this.props.services.userService;
+    this.wsService = this.props.services.websocketService;
 
     this.props.setMainApp(this);
   }
@@ -167,8 +169,8 @@ class App extends Component<any, IState> {
   }
 
   initWebsocket = () => {
-    setWebSocketUrl(url.contextPath() + 'realtime-app');
-    registerWebSocketCallbacks({
+    this.wsService.setWebSocketUrl(url.contextPath() + 'realtime-app');
+    this.wsService.registerWebSocketCallbacks({
       id: "PROGRESS",
       subscribeUrl: "/wsResp/progress/" + this.props.requestId,
       callback: this.handleProgress  //must use lambda
@@ -178,7 +180,7 @@ class App extends Component<any, IState> {
         subscribeUrl: "/wsResp/" + this.props.requestId + "/update",
         callback: (response) => this.handleWsUpdate(response)
       });
-    performWebsocketConnection();
+      this.wsService.performWebsocketConnection();
     this.wsConnected = true;
   }
 

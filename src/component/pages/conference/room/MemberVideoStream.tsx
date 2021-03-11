@@ -1,13 +1,13 @@
 import React, { Component, Fragment } from 'react';
 import UserModel from './../../../../models/UserModel';
 import ConferenceRoomModel from './../../../../models/ConferenceRoomModel';
-import { uniqueId } from './../../../../utils/StringUtil';
-import { sendToWebsocket } from './../../../../utils/websockets';
+import { uniqueId } from './../../../../utils/StringUtil'; 
 import PeerConnection from '../../../../models/conference/PeerConnection';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import HandshakeLog from './helper/HandshakeLog';
 import ToggleButton from '../../../navigation/ToggleButton';
 import { baseImageUrl } from './../../../../constant/Url';
+import { getServices } from '../../../../middlewares/Common';
 interface Props {
     user: UserModel, member: UserModel,
     room: ConferenceRoomModel, redial(code: string): any
@@ -191,7 +191,7 @@ const send = (origin: string, destination: string, roomCode: string, msg) => {
     console.debug("SEND WEBSOCKET, event: ", msg.event);
     console.debug(">> SEND WEBSOCKET from ", origin, " to " + destination + " | " + eventId + " :" + msg.event);
     //console.info("Send Audio Data");
-    sendToWebsocket("/app/publicconference/webrtc", {
+    getServices().websocketService. sendToWebsocket("/app/publicconference/webrtc", {
         realtimeHandshake: {
             //			originId : requestId,
             origin: origin,
