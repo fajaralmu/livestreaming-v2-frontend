@@ -3,6 +3,7 @@ import { contextPath } from '../constant/Url';
 import { commonAjaxPostCalls } from './Promises';
 import ChatMessageModel from './../models/ChatMessageModel';
 import WebRequest from './../models/WebRequest';
+import ConferenceRoomModel from './../models/ConferenceRoomModel';
 export default class PublicConferenceService {
      
     nofityUserEnter(roomCode: string) {
@@ -22,6 +23,10 @@ export default class PublicConferenceService {
     getRoom = () => {
         const endpoint = contextPath().concat("api/member/conference/getuserroom")
         return commonAjaxPostCalls(endpoint, {});
+    }
+    updateRoomInfo = (room:ConferenceRoomModel) => {
+        const endpoint = contextPath().concat("api/member/conference/updateroominfo")
+        return commonAjaxPostCalls(endpoint, {conferenceRoom:room});
     }
     generateRoom = () => {
         const endpoint = contextPath().concat("api/member/conference/generateroom")

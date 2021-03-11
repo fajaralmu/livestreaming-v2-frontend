@@ -5,10 +5,7 @@ import { connect } from 'react-redux';
 import { mapCommonUserStateToProps } from '../../../../../constant/stores';
 
 class ChatFormState {
-    showChat: boolean = false;
-    chatBody: string = "";
-    unreadCount: number = 0;
-    loading: boolean = false;
+    showChat: boolean = false; chatBody: string = "";  unreadCount: number = 0; loading: boolean = false;
 }
 class ChatForm extends BaseComponent {
     state: ChatFormState = new ChatFormState();

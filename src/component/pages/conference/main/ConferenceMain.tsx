@@ -16,10 +16,12 @@ import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import FormGroup from '../../../form/FormGroup';
 import ToggleButton from '../../../navigation/ToggleButton';
 import { tableHead } from './../../../../utils/CollectionUtil';
+import RoomInfoForm from './RoomInfoForm';
 
 class State {
     loading: boolean = false;
     room?: ConferenceRoomModel;
+    editMode: boolean = false;
 }
 class ConferenceMain extends BaseMainMenus {
     state: State = new State();
@@ -113,7 +115,18 @@ class ConferenceMain extends BaseMainMenus {
                         <Spinner style={{ marginBottom: 150 }} /> :
                         <Fragment>
                             {room ?
-                                <RoomInfo enterRoom={this.enterRoom} removeMember={this.removeMember} setActiveStatus={this.setActiveStatus} room={room} />
+                                <>
+                                    {this.state.editMode ?
+                                        <RoomInfoForm recordSavedCallback={this.recordLoaded} room={room} />
+                                        :
+                                        <RoomInfo enterRoom={this.enterRoom} removeMember={this.removeMember}
+                                            setActiveStatus={this.setActiveStatus} room={room} /> 
+                                    }
+                                    <FormGroup label="Edit Mode">
+                                        <ToggleButton active={this.state.editMode} onClick={val=>this.setState({editMode:val})}
+                                        />
+                                    </FormGroup>
+                                </>
                                 : <SimpleWarning className="text-center">
                                     <h4>No Data</h4>
                                     <AnchorWithIcon iconClassName="fas fa-video" children="Create" onClick={this.createRoom} />
