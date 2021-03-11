@@ -1,30 +1,31 @@
-#app-content {
+.app-content {
   position: absolute;
 }
-
-#content {
+.content {
   padding: 0px;
+}
+#content-wrapper {
+  position: absolute;
+  padding-top: 55px;
 }
 
 @media screen and (max-width: 991px) {
-  .menu-label  {
+  .menu-label {
     display: none;
   }
-  
-  #app-content {
+
+ .app-content {
     padding-left: 80px;
   }
   .div-auto-scroll {
-    overflow : scroll;
+    overflow: scroll;
   }
 }
 
 @media screen and (min-width: 992px) {
-  
-  #app-content {
+  .app-content {
     padding-left: 270px;
     margin-top: 20px;
     background-color: rgb(9, 26, 78);
   }
 }
- 

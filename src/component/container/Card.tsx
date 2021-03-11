@@ -8,7 +8,7 @@ export default class Card extends Component<any, any> {
     render() {
 
         return (
-            <div {...this.props.attributes} className={"card " + this.props.className}>
+            <div {...this.props.attributes} className={"card " + (this.props.className??"")}>
                 {this.props.title ? <div className="card-header">
                     {this.props.title}
                 </div> : null}

@@ -1,5 +1,3 @@
-
-
 import React, { Fragment } from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
@@ -55,7 +53,7 @@ class MainLayout extends BaseComponent {
     }
     setCurrentMenu = () => {
         const pathName = extractMenuPath(this.props.location.pathname);
-       
+
         if (pathName == this.currentPathName) {
             return;
         }
@@ -67,9 +65,10 @@ class MainLayout extends BaseComponent {
             this.setMenu(menu);
         }
     }
-    getSubMenus = () => {
-        if (this.state.menu && this.state.menu.subMenus != null && this.state.menu.subMenus?.length > 0) {
-            return this.state.menu?.subMenus;
+    getSubMenus = () :Menu[]|null => {
+        const menuState:Menu|undefined = this.state.menu;
+        if (menuState && menuState.subMenus != null && menuState.subMenus?.length > 0) {
+            return menuState.subMenus;
         }
         if (this.state.sidebarMenus) {
             return this.state.sidebarMenus;
@@ -77,22 +76,17 @@ class MainLayout extends BaseComponent {
         return null;
     }
     render() {
-        const showSidebar = this.state.showSidebar == true;
+        const showSidebar: boolean = this.state.showSidebar == true;
+        const className = showSidebar ? "app-content" : "content";
         return (
             <Fragment>
-                <Header setMenuNull={this.setMenuNull} activeMenuCode={this.state.activeMenuCode} setMenu={this.setMenu}  />
-                
-                    {/* <div className="?"> */}
-                    
-                    <div id={showSidebar ? "app-content" : "content"} className="container-fluid" style={{ position:'absolute', paddingTop: '55px'}}>
-                        <ApplicationContent setSidebarMenus={this.setSidebarMenus}  />
-                    </div>
-                    {showSidebar == true ?  
-                            <SideBar sidebarMenus={this.getSubMenus()} parentMenu={this.state.menu} />
-                         : null}
-                    {/* </div> */}
-
-                
+                <Header setMenuNull={this.setMenuNull} activeMenuCode={this.state.activeMenuCode} setMenu={this.setMenu} />
+                <div id="content-wrapper" className={"container-fluid  " + className}>
+                    <ApplicationContent setSidebarMenus={this.setSidebarMenus} />
+                </div>
+                {showSidebar ?
+                    <SideBar sidebarMenus={this.getSubMenus()} parentMenu={this.state.menu} />
+                    : null}
             </Fragment>
         )
     }

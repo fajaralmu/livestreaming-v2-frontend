@@ -4,7 +4,7 @@ import React, { Component, Fragment } from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
 import { withRouter, Switch, Route } from 'react-router-dom';
-import { connect } from 'react-redux'; 
+import { connect } from 'react-redux';
 import DashboardMain from '../pages/dashboard/main/DashboardMain';
 import MasterDataMain from '../pages/masterdata/MasterDataMain';
 import HomeMain from '../pages/home/HomeMain';
@@ -19,12 +19,14 @@ import ConferenceMain from '../pages/conference/main/ConferenceMain';
 import ConferenceRoom from '../pages/conference/room/ConferenceRoom';
 import Login from '../pages/login/Login';
 import ConferenceRoomSteaming from '../pages/conference/room/ConferenceRoomSteaming';
-
-class ApplicationContent extends BaseComponent {
+interface Props {
+    setSidebarMenus(menus: Menu[]): any
+}
+class ApplicationContent extends Component<Props, any> {
 
     ref: React.RefObject<BaseMainMenus> = React.createRef();
-    constructor(props: any) {
-        super(props, false);
+    constructor(props: Props) {
+        super(props);
     }
     setSidebarMenus = (menus: Menu[]) => {
         this.props.setSidebarMenus(menus);
@@ -33,8 +35,7 @@ class ApplicationContent extends BaseComponent {
         return (
             <Fragment>
                 <LoginRoute />
-                <Switch>
-
+                <Switch> 
                     {/* -------- home -------- */}
                     <Route exact path="/home" render={
                         (props: any) =>
@@ -65,10 +66,9 @@ class ApplicationContent extends BaseComponent {
 
                 </Switch>
                 <Settings />
-                <MemberQuiz />
-                <QuizManagement />
+                <MemberQuiz /> 
                 <Dashboard />
-                <Conference/>
+                <Conference />
             </Fragment>
         )
     }
@@ -92,7 +92,7 @@ const Conference = (props) => {
                 (props: any) =>
                     <ConferenceRoom />
             } />
-             <Route exact path="/conference/room/:code" render={
+            <Route exact path="/conference/room/:code" render={
                 (props: any) =>
                     <ConferenceRoom />
             } />
@@ -161,19 +161,8 @@ const MemberQuiz = (props) => {
         </Switch>
     )
 }
-
-const QuizManagement = (props) => {
-    return (
-        <Switch>
-
-        </Switch>
-    )
-}
-
-
-
-const mapDispatchToProps = (dispatch: Function) => ({})
-
+ 
+const mapDispatchToProps = (dispatch: Function) => ({}) 
 
 export default withRouter(connect(
     mapCommonUserStateToProps,
