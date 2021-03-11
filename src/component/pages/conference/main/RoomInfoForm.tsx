@@ -55,7 +55,8 @@ class RoomInfoForm extends BaseComponent {
         }
         return (
             <form onSubmit={e => { e.preventDefault(); this.onSubmit() }}>
-                <FormGroup label="EDIT ROOM DATA"/>
+                <h4 className="text-center"><i className="fas fa-pencil-alt"/> Edit Room Data</h4>
+                <p/>
                 <FormGroup label="Code">
                     <input onChange={this.updateRoomProps} name="code" value={room.code} className="form-control" />
                 </FormGroup>

@@ -1,5 +1,5 @@
 
-import React, { useRef, Fragment } from 'react';
+import React  from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
 import { withRouter, Link } from 'react-router-dom';
@@ -51,7 +51,7 @@ class Header extends BaseComponent {
 
                     <a id="navbar-brand" className="navbar-brand" href="#">{this.getApplicationProfile().name}</a>
                     
-                    <NavbarToggleButton ref={this.buttonToggleNavRef} toggleNavLinks={this.toggleNavLinks} showNavLinks={showNavLinks} />
+                    <NavbarToggleButton btnRef={this.buttonToggleNavRef} toggleNavLinks={this.toggleNavLinks} showNavLinks={showNavLinks} />
                     
                     <div className={"collapse navbar-collapse"} id="navbarToggler">
                         <ul id="navbar-top" className="navbar-nav mr-auto mt-2 mt-lg-0">
@@ -76,9 +76,9 @@ class Header extends BaseComponent {
     }
 
 }
-const NavbarToggleButton = (props: { showNavLinks: boolean, ref: React.RefObject<HTMLButtonElement>, toggleNavLinks(e): any }) => {
+const NavbarToggleButton = (props: { showNavLinks: boolean, btnRef: React.RefObject<HTMLButtonElement>, toggleNavLinks(e): any }) => {
     return (
-        <button ref={props.ref} onClick={props.toggleNavLinks} className="navbar-toggler" type="button" data-toggle="collapse"
+        <button ref={props.btnRef} onClick={props.toggleNavLinks} className="navbar-toggler" type="button" data-toggle="collapse"
             data-target="#navbarToggler" aria-controls="navbarToggler"
             aria-expanded="false" aria-label="Toggle navigation">
             <i className={props.showNavLinks ? "fas fa-times" : "fas fa-bars"} />

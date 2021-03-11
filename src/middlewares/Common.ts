@@ -14,7 +14,7 @@ export const commonHeader = () => {
     }
 };
 
-const LOGIN_KEY:string = "arabic-club-login-key";
+const LOGIN_KEY:string = "live-stream-login-key";
  
 export const getAssetsPath = () :string => {
     const store = getStore(); 

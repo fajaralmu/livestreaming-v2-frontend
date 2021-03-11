@@ -116,22 +116,22 @@ class ConferenceMain extends BaseMainMenus {
                         <Fragment>
                             {room ?
                                 <>
+                                    <FormGroup label="Edit Mode">
+                                        <ToggleButton active={this.state.editMode} onClick={val => this.setState({ editMode: val })}/>
+                                    </FormGroup>
                                     {this.state.editMode ?
                                         <RoomInfoForm recordSavedCallback={this.recordLoaded} room={room} />
                                         :
                                         <RoomInfo enterRoom={this.enterRoom} removeMember={this.removeMember}
-                                            setActiveStatus={this.setActiveStatus} room={room} /> 
+                                            setActiveStatus={this.setActiveStatus} room={room} />
                                     }
-                                    <FormGroup label="Edit Mode">
-                                        <ToggleButton active={this.state.editMode} onClick={val=>this.setState({editMode:val})}
-                                        />
-                                    </FormGroup>
+
                                 </>
                                 : <SimpleWarning className="text-center">
                                     <h4>No Data</h4>
                                     <AnchorWithIcon iconClassName="fas fa-video" children="Create" onClick={this.createRoom} />
                                 </SimpleWarning>}
-                            <AnchorWithIcon iconClassName="fas fa-sync" children="Reload" onClick={this.getRoom} />
+                            <AnchorWithIcon show={this.state.editMode==false} iconClassName="fas fa-sync" children="Reload" onClick={this.getRoom} />
                         </Fragment>}
                 </Card>
             </div>

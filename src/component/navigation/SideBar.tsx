@@ -1,6 +1,4 @@
-
-
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import BaseComponent from './../BaseComponent';
 import { mapCommonUserStateToProps } from './../../constant/stores';
 import { withRouter, Link } from 'react-router-dom';
