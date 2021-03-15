@@ -1,11 +1,8 @@
-.bg {
-    margin-top: 20px;
-    margin-bottom: 0px;
-    margin-right: 0px;
-    margin-left: 0px;
-    background-size: cover;
-    width: 100%;
-    height: 300px;
+.landing-bg {
+    position: fixed;
+    height: 100vh; 
+    width: 100vw; 
+    padding: 20px;
     background-position: center;
-    clear:both;
-}
+    background-size: cover;
+  }

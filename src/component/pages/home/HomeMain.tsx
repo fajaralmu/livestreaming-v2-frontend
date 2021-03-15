@@ -20,21 +20,18 @@ class HomeMain extends BaseComponent {
         const applicationProfile: ApplicationProfileModel = this.getApplicationProfile();
         const imageUrl: string = baseImageUrl() + applicationProfile.backgroundUrl;
         return (
-            <div style={{ backgroundColor: applicationProfile.color }} className="text-center container-fluid home-wrapper" >
-                <div className=" bg"
-                    style={{ backgroundImage: 'url("' + imageUrl + '")', }}
-                >   </div>
-                <p />
-                <Link to="/login" className="btn btn-dark btn-lg">
-                    Login to continue
-                </Link>
-                <p />
-
-                {/* <h1 className="display-4">{applicationProfile.name}</h1>
-                    <p className="lead">{applicationProfile.shortDescription}</p>
-                    <hr className="my-4" />
-                    <p>{applicationProfile.welcomingMessage}</p>
-                    <Link className="btn btn-primary btn-lg" to="/about" role="button">About Us</Link> */}
+            <div className="landing-bg"  style={{
+                    backgroundImage: 'url("' + imageUrl + '")',
+                    color: applicationProfile.fontColor
+                }} >
+                <h1 className="display-4">{applicationProfile.name}</h1>
+                <p className="lead">{applicationProfile.shortDescription}</p>
+                <hr className="my-4" />
+                <p>{applicationProfile.welcomingMessage}</p>
+                <div className="btn-group">
+                    <Link className="btn btn-primary btn-lg" to="/about" role="button">About Us</Link>
+                    <Link className="btn btn-primary btn-lg" to="/login" role="button">Login</Link>
+                </div>
             </div>
 
         )
