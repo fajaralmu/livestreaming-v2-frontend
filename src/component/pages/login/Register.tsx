@@ -9,13 +9,14 @@ import './Login.css';
 import Spinner from '../../loader/Spinner';
 import UserService from './../../../services/UserService';
 import UserModel from './../../../models/UserModel';
-import WebResponse from './../../../models/WebResponse';
-import AppIcon from './AppIcon';
+import WebResponse from './../../../models/WebResponse'; 
+import AnchorWithIcon from './../../navigation/AnchorWithIcon';
 class IState {
     loading: boolean = false; displayName: string = "";
     username: string = "";
     editPassword: string = "";
     editPasswordRepeat: string = "";
+    success:boolean = false;
 }
 class Register extends BaseComponent {
     state: IState = new IState();
@@ -51,10 +52,7 @@ class Register extends BaseComponent {
         );
     }
     userSaved = (response: WebResponse) => {
-        this.showConfirmation("Success")
-            .then((ok) => {
-                this.backToLogin();
-            })
+       this.setState({success: true});
     }
     passwordMatch = () => {
         return this.state.editPassword.trim() != "" && this.state.editPassword.trim() == this.state.editPasswordRepeat.trim();
@@ -78,18 +76,31 @@ class Register extends BaseComponent {
     }
 
     render() {
+
+        if (this.state.success) {
+            return (
+                <div  className="Register-wrapper" style={{ textAlign:'center', margin: 0, paddingTop: 100 }}>
+                    <h2 className="text-center text-success">
+                        <i className="fas fa-check"/>
+                        Register Success    
+                    </h2>
+                    <AnchorWithIcon to="/login" iconClassName="fas fa-sign-in-alt">Login</AnchorWithIcon>
+                </div>
+            )
+        }
+
         return (
-            <div id="RegisterForm" className="Register-wrapper" style={{ margin: 0, padding: 0 }}>
+            <div  className="Register-wrapper" style={{ margin: 0, padding: 0 }}>
                 <div className="text-center" style={{ marginTop: '25px' }}>
-                    <AppIcon/>
+                    <h1>Register</h1>
                 </div>
                 <form name='Register' onSubmit={(e) => { this.register(e) }}
                     method='POST' className="form-signin text-center">
                     <CommonField name="username" value={this.state.username} onChange={this.handleInputChange} />
                     <CommonField name="displayName" value={this.state.displayName} onChange={this.handleInputChange} />
 
-                    <PasswordField name="editPassword" value={this.state.editPassword} onChange={this.handleInputChange} />
-                    <PasswordField name="editPasswordRepeat" value={this.state.editPasswordRepeat} onChange={this.handleInputChange} />
+                    <PasswordField placeholder="Password" name="editPassword" value={this.state.editPassword} onChange={this.handleInputChange} />
+                    <PasswordField placeholder="Repeat Password" name="editPasswordRepeat" value={this.state.editPasswordRepeat} onChange={this.handleInputChange} />
 
                     {this.state.loading ? <Spinner /> :
                         <button className="btn text-light" style={{ backgroundColor: 'rgb(9,26,78)' }} type="submit">
@@ -103,11 +114,11 @@ class Register extends BaseComponent {
     }
 
 }
-const PasswordField = ({ name, value, onChange }) => {
+const PasswordField = ({ placeholder, name, value, onChange }) => {
     return <Fragment>
         <label className="sr-only">Password</label>
         <input style={{ borderColor: 'rgb(9,26,78)' }} name={name} value={value} onChange={onChange} type="password" id="inputPassword" className="form-control"
-            placeholder={name} required />
+            placeholder={placeholder} required />
         <p />
     </Fragment>
 }
