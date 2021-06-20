@@ -12,18 +12,19 @@ import MasterDataList from './MasterDataList';
 import AttachmentInfo from './../../../models/AttachmentInfo';
 import Filter from './../../../models/Filter';
 import WebRequest from './../../../models/WebRequest';
-import AnchorButton from './../../navigation/AnchorButton';
+import BasePage from './../../BasePage';
+
 class State {
     entityProperty?: EntityProperty;
 }
-class MasterDataManagement extends BaseComponent {
+class MasterDataManagement extends BasePage {
     masterDataService: MasterDataService;
     code: string = "";
     loadingEntityProperty: boolean = false;
     entityProperty: undefined
     state: State = new State();
     constructor(props: any) {
-        super(props, true);
+        super(props, "Master Data", true);
         this.masterDataService = this.getServices().masterDataService;
     }
     entityPropertyLoaded = (response: WebResponse) => {
@@ -46,10 +47,13 @@ class MasterDataManagement extends BaseComponent {
         document.title = new String(entityProp?.alias).toString();
     }
     componentDidMount() {
-        if (this.props.code != undefined && this.code != this.props.code) {
-            this.code = this.props.code;
-            this.loadEntityProperty();
-        }
+        this.validateLoginStatus(()=>{
+            if (this.props.code != undefined && this.code != this.props.code) {
+                this.code = this.props.code;
+                this.loadEntityProperty();
+            }
+            this.scrollTop();
+        });
     }
     startLoading(raltime: boolean) {
         if (raltime == true) {

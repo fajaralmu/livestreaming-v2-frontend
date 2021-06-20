@@ -1,8 +1,7 @@
-import React, { ChangeEvent, Component, FormEvent, Fragment } from 'react';
+import React, { ChangeEvent, FormEvent } from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { mapCommonUserStateToProps } from '../../../constant/stores';
-import BaseComponent from '../../BaseComponent';
 import ApplicationProfileModel from '../../../models/ApplicationProfileModel';
 import Card from '../../container/Card';
 import FormGroup from '../../form/FormGroup';
@@ -12,6 +11,7 @@ import WebResponse from '../../../models/WebResponse';
 import { toBase64v2 } from '../../../utils/ComponentUtil';
 import { EditField, EditImage } from './settingHelper';
 import MasterDataService from './../../../services/MasterDataService';
+import BasePage from './../../BasePage';
 class EditFields {
     name: boolean = false; pageIcon: boolean = false;
     welcomingMessage: boolean = false;
@@ -31,18 +31,14 @@ class IState {
         return false;
     }
 }
-class EditApplicationProfile extends BaseComponent {
+class EditApplicationProfile extends BasePage {
 
     masterDataService: MasterDataService;
     state: IState = new IState();
     constructor(props: any) {
-        super(props, true);
+        super(props, "Application Profile", true);
         this.masterDataService = this.getServices().masterDataService;
         this.state.applicationProfile = Object.assign(new ApplicationProfileModel(), this.getApplicationProfile());
-    }
-    componentDidMount() {
-        this.validateLoginStatus();
-        document.title = "ApplicationProfileModel Profile";
     }
     updateProfileProperty = (e: ChangeEvent) => {
         const target: HTMLInputElement | null = e.target as HTMLInputElement;

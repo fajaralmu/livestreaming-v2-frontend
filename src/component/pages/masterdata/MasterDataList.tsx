@@ -29,7 +29,7 @@ interface IState { recordData?: WebResponse, showForm: boolean, filter: Filter, 
 class MasterDataList extends BaseComponent {
     masterDataService: MasterDataService;
     state: IState;
-    recordToEdit?: {} = undefined;
+    recordToEdit?: any|undefined = undefined;
     entityProperty: EntityProperty;
     headerProps: HeaderProps[];
     constructor(props: any) {
@@ -62,9 +62,9 @@ class MasterDataList extends BaseComponent {
     loadEntities = (page: number | undefined) => {
         const filter = Object.assign(new Filter(), this.state.filter);
         const entityName = this.entityProperty.entityName;
-        filter.page = page ?? filter.page;
+        filter.page = page ?? filter.page ?? 0;
         const request: WebRequest = {
-            entity: entityName,
+            entity: entityName??"",
             filter: this.adjustFilter(filter)
         }
         this.commonAjax(
@@ -132,8 +132,8 @@ class MasterDataList extends BaseComponent {
     orderButtonOnClick = (e) => {
         const dataset: DOMStringMap = e.target.dataset;
         const filter = this.state.filter;
-        filter.orderBy = dataset['orderby'];
-        filter.orderType = dataset['ordertype'];
+        filter.orderBy = dataset['orderby']??"id";
+        filter.orderType = dataset['ordertype']??"asc";
         this.setState({ filter: filter });
         this.loadEntities(0);
     }
@@ -142,11 +142,11 @@ class MasterDataList extends BaseComponent {
             return;
         }
         this.recordToEdit = response.entities[0];
-        this.setState({ showForm: true });
+        this.setState({ showForm: true }, this.scrollTop);
     }
     showCreateForm = (e) => {
         this.recordToEdit = undefined;
-        this.setState({ showForm: true });
+        this.setState({ showForm: true }, this.scrollTop);
     }
     updateFilterPage = (page: any) => {
         const filter = this.state.filter;
@@ -195,7 +195,7 @@ class MasterDataList extends BaseComponent {
                                     <input value={(this.state.filter.page ?? 0) + 1} onChange={(e) => { this.updateFilterPage(e.target.value) }} min="1" className="form-control" type="number" placeholder="go to page" />
                                 </div>
                                 <div className="col-6">
-                                    <input value={this.state.filter.limit} onChange={(e) => this.updateFilterLimit(e.target.value)} min="1" className="form-control" type="number" placeholder="record per page" />
+                                    <input value={this.state.filter.limit??5} onChange={(e) => this.updateFilterLimit(e.target.value)} min="1" className="form-control" type="number" placeholder="record per page" />
                                 </div>
                                 <div className="col-12"><p /></div>
                                 <div className="col-3">

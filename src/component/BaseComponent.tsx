@@ -8,6 +8,7 @@ import { AuthorityType } from '../models/AuthorityType';
 import WebRequest from './../models/WebRequest';
 import WebSocketService from './../services/WebSocketService';
 import { getStore } from './../redux/configureStore';
+import { doItLater } from './../utils/EventUtil';
 
 export default class BaseComponent extends Component<any, any> {
     parentApp: any;
@@ -24,13 +25,25 @@ export default class BaseComponent extends Component<any, any> {
         this.parentApp = this.props.mainApp;
     }
 
-    validateLoginStatus = () :boolean => {
-        if (this.authenticated == false) return true;
+    validateLoginStatus = (callback?:()=>any) :boolean => {
+        if (this.authenticated == false) {
+            if (callback) callback();
+            return true;
+        }
         if (this.isLoggedUserNull()) {
             this.backToLogin();
             return false;
         }
+        if (callback) callback();
         return true;
+    }
+
+    scrollTop = () => {
+        // console.info("SCROLL TOP");
+        const opt:ScrollToOptions = { top:0,  behavior: 'smooth' };
+        doItLater(()=>{
+        window.scrollTo(opt);
+        }, 100);
     }
 
     protected sendWebSocket = (url: string, payload: WebRequest) => {

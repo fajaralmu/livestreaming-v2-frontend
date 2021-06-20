@@ -4,7 +4,8 @@
     z-index: 100;
     right: 0;
     bottom: 0;
-    min-width: 300px;
+    min-width: 320px;
+    transition-duration: 300ms;
 }
 
 .chat-list-wrapper {
@@ -18,4 +19,8 @@
 .chat-item {
     padding-left: 5px;
     padding-right: 5px;
+}
+
+.chat-panel-position {
+    position: absolute;
 }

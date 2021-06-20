@@ -14,10 +14,10 @@ import { doItLater } from './../../../../utils/EventUtil';
 import ChatMessageModel from './../../../../models/ChatMessageModel';
 import ChatMessagePanel from './chat/ChatMessagePanel';
 import { RoomInfo, ErrorMediaStreamMessage, InfoMediaStreamMessage, MemberList } from './helper/roomHelper';
-import BaseComponent from './../../../BaseComponent';
 import { MediaShare } from '../../../../constant/MediaShare';
 import AnchorWithIcon from '../../../navigation/AnchorWithIcon';
 import WebSocketService from './../../../../services/WebSocketService';
+import BasePage from './../../../BasePage';
 enum StreamType { CAMERA, SCREEN }
 const PEER_NEW = "PEER_NEW", CHAT_MESSAGE = "CHAT_MESSAGE", PEER_ENTER = "PEER_ENTER", PEER_LEAVE = "PEER_LEAVE", ROOM_INVALIDATED = "ROOM_INVALIDATED";
 class State {
@@ -33,7 +33,7 @@ const videoConstraint: MediaTrackConstraints = {
     width: { ideal: 40 }, height: { ideal: 40 }
 }
 const mediaStreamConfig: MediaStreamConstraints = { video: videoConstraint, audio: true };
-class ConferenceRoomSteaming extends BaseComponent {
+class ConferenceRoomSteaming extends BasePage {
 
     state: State = new State();
     publicConferenceService: PublicConferenceService;
@@ -46,7 +46,7 @@ class ConferenceRoomSteaming extends BaseComponent {
     wsService:WebSocketService ;
 
     constructor(props: any) {
-        super(props, true);
+        super(props, "Conference Room", true);
         this.publicConferenceService = this.getServices().publicConferenceService;
         this.wsService = this.getServices().websocketService;
     }
@@ -317,11 +317,10 @@ class ConferenceRoomSteaming extends BaseComponent {
         )
     }
     componentDidMount() {
-        if (!this.validateLoginStatus()) {
-            this.backToLogin();
-        } else {
+        this.validateLoginStatus(()=>{
             this.getRoomCodeFromProps();
-        }
+            this.scrollTop();
+        });
     }
     getMediaStreamConfig = (): MediaStreamConstraints => {
         if (this.state.room) {
@@ -432,8 +431,8 @@ class ConferenceRoomSteaming extends BaseComponent {
                                 videoRef={this.videoRef} redialAll={this.notifyUserEnterRoom} memberRefs={this.memberRefs} user={user}
                                 leaveRoom={this.leaveRoom} room={room} />
                             <p />
-                            <InfoMediaStreamMessage message={this.state.mediaStreamReady ? "Media Stream Ready" : undefined} />
-                            <ErrorMediaStreamMessage retry={this.retryMediaStream} message={this.state.errorMessage} />
+                            <InfoMediaStreamMessage message={this.state.mediaStreamReady ? "Media Stream Ready" : ""} />
+                            <ErrorMediaStreamMessage retry={this.retryMediaStream} message={this.state.errorMessage??""} />
                             <MemberList user={user} room={room}
                                 memberRefs={this.memberRefs} dialPeerByCode={this.dialPeerByCode} />
 

@@ -1,10 +1,8 @@
-import React, { ChangeEvent, Component, Fragment } from 'react'
+import React, { Component, Fragment } from 'react'
 import ConferenceRoomModel from '../../../../../models/ConferenceRoomModel';
 import './ChatPanel.css'
 import ChatMessageModel from '../../../../../models/ChatMessageModel';
 import AnchorWithIcon from '../../../../navigation/AnchorWithIcon';
-import BaseComponent from '../../../../BaseComponent';
-import PublicConferenceService from '../../../../../services/PublicConferenceService';
 import ChatForm from './ChatForm';
 interface Props {
     room: ConferenceRoomModel;
@@ -50,7 +48,7 @@ export default class ChatMessagePanel extends Component<Props, State> {
     render() {
         const showChat = this.state.showChat;
         return (
-            <div style={{ position: 'absolute' }}>
+            <div className="chat-panel-position">
                 <div className="chat-panel bg-success border border-success rounded">
                     {showChat ?
                         <><ChatList chats={this.getMessages()} />
@@ -90,7 +88,7 @@ class ChatList extends Component<{ chats: ChatMessageModel[] }, any>{
                 <div style={{ padding: 2 }}>
                     {props.chats.map((chat, i) => {
                         return <Fragment key={"chat-" + i}>
-                            <div ref={i == props.chats.length - 1 ? this.lastChatRef : undefined} className="chat-item border rounded bg-light" >
+                            <div ref={i == props.chats.length - 1 ? this.lastChatRef : null} className="chat-item border rounded bg-light" >
                                 <div style={{ width: '100%', fontSize: '0.5em' }} className="text-right  "><strong>{chat.user?.displayName}</strong></div>
                                 <span>{chat.date?.toLocaleDateString()}</span>
                                 <p  >{chat.body}</p>

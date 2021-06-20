@@ -1,20 +1,16 @@
 
 
-import React, { Component, Fragment } from 'react';
+import React from 'react';
 import { withRouter, Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import BaseComponent from '../../BaseComponent';
 import { mapCommonUserStateToProps } from '../../../constant/stores';
 import ApplicationProfileModel from '../../../models/ApplicationProfileModel';
 import { baseImageUrl } from '../../../constant/Url';
 import './Home.css';
-class HomeMain extends BaseComponent {
+import BasePage from './../../BasePage';
+class HomeMain extends BasePage {
     constructor(props: any) {
-        super(props, false);
-    }
-
-    componentDidMount() {
-        document.title = "Home";
+        super(props, "Home", false);
     }
     render() {
         const applicationProfile: ApplicationProfileModel = this.getApplicationProfile();
@@ -22,7 +18,7 @@ class HomeMain extends BaseComponent {
         return (
             <div className="landing-bg"  style={{
                     backgroundImage: 'url("' + imageUrl + '")',
-                    color: applicationProfile.fontColor
+                    color: applicationProfile.fontColor??"rgb(0,0,0)"
                 }} >
                 <h1 className="display-4">{applicationProfile.name}</h1>
                 <p className="lead">{applicationProfile.shortDescription}</p>

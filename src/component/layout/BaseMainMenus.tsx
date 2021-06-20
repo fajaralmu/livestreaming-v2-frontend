@@ -1,19 +1,13 @@
 
 import BaseComponent from './../BaseComponent';
-export default class BaseMainMenus extends BaseComponent {
+import BasePage from './../BasePage';
+export default class BaseMainMenus extends BasePage {
 
     title:string = "";
     constructor(props, title:string, authenticated:boolean = false) {
-        super(props, authenticated);
-        this.title = title;
+        super(props, title, authenticated);
     }
 
-    componentDidMount(){
-        if (this.authenticated) {
-            this.validateLoginStatus();
-        }
-        document.title = this.title;
-        
-    }
+     
 
 }
